@@ -1,0 +1,92 @@
+CREATE TABLE IF NOT EXISTS users (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    nickname VARCHAR(100) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    phone VARCHAR(20) UNIQUE,
+    email VARCHAR(100) UNIQUE,
+    avatar VARCHAR(500) DEFAULT '',
+    gender TINYINT DEFAULT 0,
+    birthday DATE DEFAULT NULL,
+    signature VARCHAR(500) DEFAULT '',
+    country VARCHAR(50) DEFAULT '',
+    province VARCHAR(50) DEFAULT '',
+    city VARCHAR(50) DEFAULT '',
+    status TINYINT DEFAULT 1,
+    follow_count BIGINT DEFAULT 0,
+    fans_count BIGINT DEFAULT 0,
+    like_count BIGINT DEFAULT 0,
+    video_count BIGINT DEFAULT 0,
+    last_login_time DATETIME DEFAULT NULL,
+    last_login_ip VARCHAR(50) DEFAULT NULL,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS videos (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    video_id VARCHAR(32) NOT NULL UNIQUE,
+    author_id BIGINT NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    video_url VARCHAR(500) NOT NULL,
+    cover_url VARCHAR(500) NOT NULL,
+    duration INT DEFAULT 0,
+    width INT DEFAULT 1080,
+    height INT DEFAULT 1920,
+    file_size BIGINT DEFAULT 0,
+    like_count BIGINT DEFAULT 0,
+    comment_count BIGINT DEFAULT 0,
+    share_count BIGINT DEFAULT 0,
+    collect_count BIGINT DEFAULT 0,
+    view_count BIGINT DEFAULT 0,
+    status TINYINT DEFAULT 1,
+    topic_ids VARCHAR(255) DEFAULT '',
+    location VARCHAR(200) DEFAULT '',
+    latitude DECIMAL(10, 6) DEFAULT NULL,
+    longitude DECIMAL(10, 6) DEFAULT NULL,
+    at_user_ids VARCHAR(500) DEFAULT '',
+    music_id VARCHAR(64) DEFAULT '',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS follows (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    follow_id BIGINT NOT NULL,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_user_follow (user_id, follow_id)
+);
+
+CREATE TABLE IF NOT EXISTS video_likes (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    video_id BIGINT NOT NULL,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_user_video (user_id, video_id)
+);
+
+CREATE TABLE IF NOT EXISTS comments (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    video_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    parent_id BIGINT DEFAULT NULL,
+    root_id BIGINT DEFAULT NULL,
+    content TEXT NOT NULL,
+    like_count BIGINT DEFAULT 0,
+    reply_count BIGINT DEFAULT 0,
+    status TINYINT DEFAULT 1,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS token_sessions (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    access_token VARCHAR(128) NOT NULL UNIQUE,
+    refresh_token VARCHAR(128) NOT NULL UNIQUE,
+    revoked BIT DEFAULT 0,
+    expires_at DATETIME DEFAULT NULL,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+);

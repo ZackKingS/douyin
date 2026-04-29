@@ -1,0 +1,45 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Android
+*.apk
+*.aab
+*.dex
+*.class
+*.jar
+*.log
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+Thumbs.db
+
+# Local configuration
+local.properties
+
+# Generated files
+bin/
+gen/
+out/
+
+# Logs
+*.log
+
+# Backend specific
+backend/douyin-backend/storage/
+backend/douyin-backend/target/
+backend/douyin-backend/.mvn/wrapper/maven-wrapper.jar
+
+# Environment files
+.env
+.env.local
+*.local
+
+# Credentials
+credentials.json
+secrets.properties
