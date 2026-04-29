@@ -4,7 +4,7 @@
 
 | 属性 | 值 |
 |------|-----|
-| 文档版本 | v1.0.1 |
+| 文档版本 | v1.0.2 |
 | API 版本 | v1 |
 | 基础路径 | `/api/v1` |
 | 最后更新 | 2026-04-29 |
@@ -93,12 +93,15 @@ Authorization: Bearer {token}
 ```json
 {
     "code": 200,
-    "message": "success",
+    "message": "注册成功",
     "data": {
         "userId": 10001,
         "username": "zhangsan",
         "nickname": "张三",
-        "token": "eyJhbGciOiJIUzI1NiJ9..."
+        "avatar": null,
+        "token": "eyJhbGciOiJIUzI1NiJ9...",
+        "refreshToken": "eyJhbGciOiJIUzI1NiJ9.refresh...",
+        "expiresIn": 86400
     },
     "requestId": "uuid-xxx",
     "timestamp": 1714368000000
@@ -124,14 +127,17 @@ Authorization: Bearer {token}
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| username | string | 条件 | 用户名 (与 phone 二选一) |
-| phone | string | 条件 | 手机号 (与 username 二选一) |
-| password | string | 是 | 密码 |
+| loginType | string | 是 | 登录类型: `username` / `phone` |
+| username | string | 条件 | 用户名 (loginType=username时必填) |
+| phone | string | 条件 | 手机号 (loginType=phone时必填) |
+| password | string | 条件 | 密码 (loginType=username时必填) |
+| code | string | 条件 | 验证码 (loginType=phone时必填) |
 
 **请求示例 1** (用户名登录):
 
 ```json
 {
+    "loginType": "username",
     "username": "zhangsan",
     "password": "123456"
 }
@@ -141,8 +147,9 @@ Authorization: Bearer {token}
 
 ```json
 {
+    "loginType": "phone",
     "phone": "13800138000",
-    "password": "123456"
+    "code": "123456"
 }
 ```
 
@@ -151,13 +158,15 @@ Authorization: Bearer {token}
 ```json
 {
     "code": 200,
-    "message": "success",
+    "message": "登录成功",
     "data": {
         "userId": 10001,
         "username": "zhangsan",
         "nickname": "张三",
         "avatar": "https://example.com/avatar.jpg",
-        "token": "eyJhbGciOiJIUzI1NiJ9..."
+        "token": "eyJhbGciOiJIUzI1NiJ9...",
+        "refreshToken": "eyJhbGciOiJIUzI1NiJ9.refresh...",
+        "expiresIn": 86400
     },
     "requestId": "uuid-xxx",
     "timestamp": 1714368000000
@@ -202,7 +211,8 @@ Authorization: Bearer {token}
     "message": "success",
     "data": {
         "token": "eyJhbGciOiJIUzI1NiJ9.new...",
-        "refreshToken": "eyJhbGciOiJIUzI1NiJ9.new.refresh..."
+        "refreshToken": "eyJhbGciOiJIUzI1NiJ9.new.refresh...",
+        "expiresIn": 86400
     },
     "requestId": "uuid-xxx",
     "timestamp": 1714368000000
@@ -222,11 +232,12 @@ Authorization: Bearer {token}
 ```json
 {
     "code": 200,
-    "message": "登出成功",
+    "message": "退出成功",
     "data": null,
     "requestId": "uuid-xxx",
     "timestamp": 1714368000000
 }
+```
 ```
 
 ---
@@ -245,6 +256,12 @@ Authorization: Bearer {token}
 |------|------|------|------|
 | userId | long | 是 | 用户ID |
 
+**查询参数**:
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| sourceUserId | long | 否 | 来源用户ID（用于判断关注关系） |
+
 **响应示例**:
 
 ```json
@@ -252,7 +269,7 @@ Authorization: Bearer {token}
     "code": 200,
     "message": "success",
     "data": {
-        "id": 10001,
+        "userId": 10001,
         "username": "zhangsan",
         "nickname": "张三",
         "avatar": "https://example.com/avatar.jpg",
@@ -266,7 +283,12 @@ Authorization: Bearer {token}
         "fansCount": 2000,
         "likeCount": 5000,
         "videoCount": 50,
-        "isFollowing": true
+        "isFollowing": true,
+        "isFollowed": true,
+        "isMutual": true,
+        "level": 5,
+        "badge": "认证用户",
+        "createTime": "2026-04-29T10:00:00"
     },
     "requestId": "uuid-xxx",
     "timestamp": 1714368000000
@@ -279,6 +301,10 @@ Authorization: Bearer {token}
 |------|------|------|
 | gender | int | 性别: 0-未知, 1-男, 2-女 |
 | isFollowing | boolean | 当前用户是否关注了该用户 (登录后可见) |
+| isFollowed | boolean | 该用户是否关注了当前用户 |
+| isMutual | boolean | 是否互相关注 |
+| level | int | 用户等级 |
+| badge | string | 用户标签/认证信息 |
 
 ---
 
@@ -322,7 +348,28 @@ Authorization: Bearer {token}
 {
     "code": 200,
     "message": "更新成功",
-    "data": null,
+    "data": {
+        "userId": 10001,
+        "username": "zhangsan",
+        "nickname": "新昵称",
+        "avatar": "https://example.com/new-avatar.jpg",
+        "gender": 1,
+        "birthday": "2000-01-01",
+        "signature": "新的个性签名",
+        "country": "中国",
+        "province": "上海",
+        "city": "上海市",
+        "followCount": 100,
+        "fansCount": 2000,
+        "likeCount": 5000,
+        "videoCount": 50,
+        "isFollowing": false,
+        "isFollowed": true,
+        "isMutual": false,
+        "level": 5,
+        "badge": null,
+        "createTime": "2026-04-29T10:00:00"
+    },
     "requestId": "uuid-xxx",
     "timestamp": 1714368000000
 }
@@ -349,7 +396,9 @@ Authorization: Bearer {token}
     "code": 200,
     "message": "关注成功",
     "data": {
-        "followId": 10002
+        "isFollowing": true,
+        "followCount": 101,
+        "fansCount": 2001
     },
     "requestId": "uuid-xxx",
     "timestamp": 1714368000000
@@ -384,10 +433,15 @@ Authorization: Bearer {token}
 {
     "code": 200,
     "message": "取消关注成功",
-    "data": null,
+    "data": {
+        "isFollowing": false,
+        "followCount": 100,
+        "fansCount": 2000
+    },
     "requestId": "uuid-xxx",
     "timestamp": 1714368000000
 }
+```
 ```
 
 ---
@@ -418,22 +472,23 @@ Authorization: Bearer {token}
     "code": 200,
     "message": "success",
     "data": {
-        "page": 1,
-        "size": 20,
-        "total": 100,
-        "totalPages": 5,
-        "list": [
+        "items": [
             {
-                "id": 10002,
-                "username": "lisi",
+                "userId": 10002,
                 "nickname": "李四",
                 "avatar": "https://example.com/avatar2.jpg",
                 "signature": "我是李四",
-                "followCount": 50,
                 "fansCount": 100,
-                "isFollowing": true
+                "followCount": 50,
+                "isFollowing": true,
+                "isMutual": false,
+                "level": 2
             }
-        ]
+        ],
+        "page": 1,
+        "size": 20,
+        "total": 100,
+        "hasMore": true
     },
     "requestId": "uuid-xxx",
     "timestamp": 1714368000000
@@ -483,6 +538,7 @@ Authorization: Bearer {token}
 |------|------|------|------|
 | page | int | 否 | 页码，默认 1 |
 | size | int | 否 | 每页条数，默认 20 |
+| type | string | 否 | 类型: `all` / `video` / `music`，默认 `all` |
 
 **响应示例**:
 
@@ -491,20 +547,19 @@ Authorization: Bearer {token}
     "code": 200,
     "message": "success",
     "data": {
-        "page": 1,
-        "size": 20,
-        "total": 100,
-        "totalPages": 5,
-        "list": [
+        "items": [
             {
-                "id": 1,
                 "videoId": "v1234567890abcdef",
                 "author": {
-                    "id": 10001,
-                    "username": "zhangsan",
+                    "userId": 10001,
                     "nickname": "张三",
                     "avatar": "https://example.com/avatar.jpg",
-                    "isFollowing": false
+                    "signature": "这个人很懒",
+                    "fansCount": 2000,
+                    "followCount": 100,
+                    "isFollowing": false,
+                    "isMutual": false,
+                    "level": 1
                 },
                 "title": "这是一个视频标题",
                 "description": "视频描述内容",
@@ -520,11 +575,22 @@ Authorization: Bearer {token}
                 "viewCount": 50000,
                 "isLiked": true,
                 "isCollected": false,
+                "topicName": "话题名称",
+                "music": {
+                    "musicId": "m001",
+                    "title": "背景音乐",
+                    "author": "音乐人",
+                    "albumCover": "https://example.com/music.jpg"
+                },
                 "location": "北京",
-                "topicIds": ["1", "2"],
-                "createTime": "2026-04-29T10:00:00"
+                "createTime": "2026-04-29T10:00:00",
+                "nextTime": null
             }
-        ]
+        ],
+        "page": 1,
+        "size": 20,
+        "total": 100,
+        "hasMore": true
     },
     "requestId": "uuid-xxx",
     "timestamp": 1714368000000
@@ -546,7 +612,9 @@ Authorization: Bearer {token}
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | page | int | 否 | 页码，默认 1 |
-| size | int | 否 | 每页条数，默认 20 |
+| size | int | 否 | 每页条数，默认 10 |
+| lastTime | long | 否 | 时间戳（用于下拉刷新），默认 0 |
+| source | string | 否 | 来源: `home`(推荐) / `follow`(关注)，默认 `home` |
 
 **响应示例**:
 
@@ -555,20 +623,19 @@ Authorization: Bearer {token}
     "code": 200,
     "message": "success",
     "data": {
-        "page": 1,
-        "size": 20,
-        "total": 1000,
-        "totalPages": 50,
-        "list": [
+        "items": [
             {
-                "id": 1,
                 "videoId": "v1234567890abcdef",
                 "author": {
-                    "id": 10001,
-                    "username": "zhangsan",
+                    "userId": 10001,
                     "nickname": "张三",
                     "avatar": "https://example.com/avatar.jpg",
-                    "isFollowing": false
+                    "signature": "这个人很懒",
+                    "fansCount": 2000,
+                    "followCount": 100,
+                    "isFollowing": false,
+                    "isMutual": false,
+                    "level": 1
                 },
                 "title": "这是一个视频标题",
                 "description": "视频描述内容",
@@ -584,15 +651,25 @@ Authorization: Bearer {token}
                 "viewCount": 50000,
                 "isLiked": true,
                 "isCollected": false,
+                "topicName": "话题名称",
+                "music": {
+                    "musicId": "m001",
+                    "title": "背景音乐",
+                    "author": "音乐人",
+                    "albumCover": "https://example.com/music.jpg"
+                },
                 "location": "北京",
-                "topicIds": ["1", "2"],
-                "createTime": "2026-04-29T10:00:00"
+                "createTime": "2026-04-29T10:00:00",
+                "nextTime": 1714368000000
             }
-        ]
+        ],
+        "nextTime": 1714368000000,
+        "hasMore": true
     },
     "requestId": "uuid-xxx",
     "timestamp": 1714368000000
 }
+```
 ```
 
 ---
@@ -616,17 +693,17 @@ Authorization: Bearer {token}
     "code": 200,
     "message": "success",
     "data": {
-        "id": 1,
         "videoId": "v1234567890abcdef",
         "author": {
-            "id": 10001,
-            "username": "zhangsan",
+            "userId": 10001,
             "nickname": "张三",
             "avatar": "https://example.com/avatar.jpg",
             "signature": "这个人很懒",
-            "followCount": 100,
             "fansCount": 2000,
-            "isFollowing": false
+            "followCount": 100,
+            "isFollowing": false,
+            "isMutual": false,
+            "level": 1
         },
         "title": "这是一个视频标题",
         "description": "视频描述内容",
@@ -635,6 +712,7 @@ Authorization: Bearer {token}
         "duration": 60,
         "width": 1080,
         "height": 1920,
+        "fileSize": 10485760,
         "likeCount": 1000,
         "commentCount": 50,
         "shareCount": 20,
@@ -642,11 +720,20 @@ Authorization: Bearer {token}
         "viewCount": 50000,
         "isLiked": true,
         "isCollected": false,
+        "isFollowing": true,
+        "topics": [
+            {"id": 1, "name": "话题1"},
+            {"id": 2, "name": "话题2"}
+        ],
+        "music": {
+            "musicId": "m001",
+            "title": "背景音乐",
+            "author": "音乐人",
+            "albumCover": "https://example.com/music.jpg"
+        },
         "location": "北京",
         "latitude": 39.9042,
         "longitude": 116.4074,
-        "topicIds": ["1", "2"],
-        "musicId": 1,
         "createTime": "2026-04-29T10:00:00"
     },
     "requestId": "uuid-xxx",
@@ -676,14 +763,14 @@ Authorization: Bearer {token}
 |------|------|------|------|
 | file | file | 是 | 视频文件 (支持 mp4, avi, mov, webm) |
 | title | string | 是 | 视频标题 (1-200字) |
-| description | string | 否 | 视频描述 (最多 2000字) |
 | cover | file | 否 | 自定义封面图片 |
+| description | string | 否 | 视频描述 (最多 2000字) |
 | topicIds | string | 否 | 话题ID列表，逗号分隔 |
 | location | string | 否 | 发布位置 |
 | latitude | double | 否 | 纬度 |
 | longitude | double | 否 | 经度 |
 | atUserIds | string | 否 | @的用户ID列表，逗号分隔 |
-| musicId | long | 否 | 使用的音乐ID |
+| musicId | string | 否 | 使用的音乐ID |
 
 **响应示例**:
 
@@ -693,11 +780,10 @@ Authorization: Bearer {token}
     "message": "上传成功",
     "data": {
         "videoId": "v1234567890abcdef",
-        "videoUrl": "https://example.com/videos/10001/v1234567890abcdef.mp4",
+        "title": "视频标题",
+        "status": "published",
         "coverUrl": "https://example.com/covers/v1234567890abcdef.jpg",
-        "duration": 60,
-        "width": 1080,
-        "height": 1920
+        "videoUrl": "https://example.com/videos/10001/v1234567890abcdef.mp4"
     },
     "requestId": "uuid-xxx",
     "timestamp": 1714368000000
@@ -732,7 +818,7 @@ Authorization: Bearer {token}
     "code": 200,
     "message": "点赞成功",
     "data": {
-        "videoId": "v1234567890abcdef",
+        "isLiked": true,
         "likeCount": 1001
     },
     "requestId": "uuid-xxx",
@@ -768,7 +854,7 @@ Authorization: Bearer {token}
     "code": 200,
     "message": "取消点赞成功",
     "data": {
-        "videoId": "v1234567890abcdef",
+        "isLiked": false,
         "likeCount": 1000
     },
     "requestId": "uuid-xxx",
@@ -790,6 +876,12 @@ Authorization: Bearer {token}
 |------|------|------|------|
 | videoId | string | 是 | 视频唯一标识 |
 
+**查询参数**:
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| platform | string | 否 | 分享平台: `copy`(复制链接), `weixin`(微信), `weibo`(微博)等，默认 `copy` |
+
 **响应示例**:
 
 ```json
@@ -797,6 +889,7 @@ Authorization: Bearer {token}
     "code": 200,
     "message": "分享成功",
     "data": {
+        "shareUrl": "https://example.com/share/abc123",
         "shareCount": 21
     },
     "requestId": "uuid-xxx",
@@ -825,14 +918,16 @@ Authorization: Bearer {token}
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | content | string | 是 | 评论内容 (1-500字) |
-| parentId | long | 否 | 父评论ID (回复评论时必填) |
+| parentId | string | 否 | 父评论ID (回复评论时必填) |
+| atUserIds | string | 否 | @的用户ID列表，逗号分隔 |
 
 **请求示例**:
 
 ```json
 {
     "content": "这个视频太棒了！",
-    "parentId": null
+    "parentId": null,
+    "atUserIds": null
 }
 ```
 
@@ -841,7 +936,8 @@ Authorization: Bearer {token}
 ```json
 {
     "content": "同意你的观点",
-    "parentId": 100
+    "parentId": "c100",
+    "atUserIds": "10002"
 }
 ```
 
@@ -852,20 +948,11 @@ Authorization: Bearer {token}
     "code": 200,
     "message": "评论成功",
     "data": {
-        "id": 1000,
-        "videoId": "v1234567890abcdef",
-        "userId": 10001,
-        "user": {
-            "id": 10001,
-            "username": "zhangsan",
-            "nickname": "张三",
-            "avatar": "https://example.com/avatar.jpg"
-        },
+        "commentId": "c1000",
         "content": "这个视频太棒了！",
         "likeCount": 0,
         "replyCount": 0,
-        "parentId": null,
-        "rootId": null,
+        "isLiked": false,
         "createTime": "2026-04-29T10:00:00"
     },
     "requestId": "uuid-xxx",
@@ -893,6 +980,7 @@ Authorization: Bearer {token}
 |------|------|------|------|
 | page | int | 否 | 页码，默认 1 |
 | size | int | 否 | 每页条数，默认 20 |
+| sort | string | 否 | 排序方式: `popular`(热门) / `time`(最新)，默认 `popular` |
 
 **响应示例**:
 
@@ -901,48 +989,53 @@ Authorization: Bearer {token}
     "code": 200,
     "message": "success",
     "data": {
-        "page": 1,
-        "size": 20,
-        "total": 100,
-        "totalPages": 5,
-        "list": [
+        "items": [
             {
-                "id": 1000,
-                "videoId": "v1234567890abcdef",
-                "userId": 10001,
+                "commentId": "c1000",
                 "user": {
-                    "id": 10001,
-                    "username": "zhangsan",
+                    "userId": 10001,
                     "nickname": "张三",
-                    "avatar": "https://example.com/avatar.jpg"
+                    "avatar": "https://example.com/avatar.jpg",
+                    "signature": "这个人很懒",
+                    "fansCount": 2000,
+                    "followCount": 100,
+                    "isFollowing": false,
+                    "isMutual": false,
+                    "level": 1
                 },
                 "content": "这个视频太棒了！",
                 "likeCount": 50,
                 "replyCount": 5,
-                "parentId": null,
-                "rootId": null,
                 "isLiked": false,
                 "createTime": "2026-04-29T10:00:00",
                 "replies": [
                     {
-                        "id": 1001,
-                        "userId": 10002,
+                        "commentId": "c1001",
                         "user": {
-                            "id": 10002,
-                            "username": "lisi",
+                            "userId": 10002,
                             "nickname": "李四",
-                            "avatar": "https://example.com/avatar2.jpg"
+                            "avatar": "https://example.com/avatar2.jpg",
+                            "signature": "我是李四",
+                            "fansCount": 100,
+                            "followCount": 50,
+                            "isFollowing": false,
+                            "isMutual": false,
+                            "level": 2
                         },
                         "content": "确实很棒！",
                         "likeCount": 10,
-                        "parentId": 1000,
-                        "rootId": 1000,
+                        "replyCount": 0,
                         "isLiked": true,
-                        "createTime": "2026-04-29T10:05:00"
+                        "createTime": "2026-04-29T10:05:00",
+                        "replies": []
                     }
                 ]
             }
-        ]
+        ],
+        "page": 1,
+        "size": 20,
+        "total": 100,
+        "hasMore": true
     },
     "requestId": "uuid-xxx",
     "timestamp": 1714368000000
@@ -964,7 +1057,9 @@ Authorization: Bearer {token}
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | page | int | 否 | 页码，默认 1 |
-| size | int | 否 | 每页条数，默认 20 |
+| size | int | 否 | 每页条数，默认 10 |
+| source | string | 否 | 来源: `home`(推荐) / `follow`(关注)，默认 `home` |
+| cursor | string | 否 | 游标（用于分页） |
 
 **响应示例**: 参考 4.1 视频流
 
@@ -987,22 +1082,33 @@ Authorization: Bearer {token}
 | page | int | 否 | 页码，默认 1 |
 | size | int | 否 | 每页条数，默认 20 |
 
-**响应示例** (视频搜索):
+**响应示例**:
 
 ```json
 {
     "code": 200,
     "message": "success",
     "data": {
-        "page": 1,
-        "size": 20,
-        "total": 100,
-        "totalPages": 5,
-        "list": [
-            {
-                "type": "video",
-                "video": {
-                    "id": 1,
+        "keyword": "测试",
+        "users": {
+            "items": [
+                {
+                    "userId": 10001,
+                    "nickname": "张三",
+                    "avatar": "https://example.com/avatar.jpg",
+                    "signature": "这个人很懒",
+                    "fansCount": 2000,
+                    "followCount": 100,
+                    "isFollowing": false,
+                    "isMutual": false,
+                    "level": 1
+                }
+            ],
+            "total": 10
+        },
+        "videos": {
+            "items": [
+                {
                     "videoId": "v1234567890abcdef",
                     "author": { ... },
                     "title": "这是一个视频标题",
@@ -1012,43 +1118,34 @@ Authorization: Bearer {token}
                     "duration": 60,
                     "likeCount": 1000,
                     "commentCount": 50,
+                    "shareCount": 20,
+                    "collectCount": 100,
                     "viewCount": 50000,
-                    "createTime": "2026-04-29T10:00:00"
+                    "isLiked": false,
+                    "isCollected": false,
+                    "topicName": "话题名称",
+                    "music": {
+                        "musicId": "m001",
+                        "title": "背景音乐",
+                        "author": "音乐人",
+                        "albumCover": "https://example.com/music.jpg"
+                    },
+                    "location": "北京",
+                    "createTime": "2026-04-29T10:00:00",
+                    "nextTime": null
                 }
-            }
-        ]
-    },
-    "requestId": "uuid-xxx",
-    "timestamp": 1714368000000
-}
-```
-
-**响应示例** (用户搜索):
-
-```json
-{
-    "code": 200,
-    "message": "success",
-    "data": {
+            ],
+            "total": 100
+        },
+        "topics": {
+            "items": [
+                {"id": 1, "name": "测试话题"}
+            ],
+            "total": 5
+        },
         "page": 1,
         "size": 20,
-        "total": 10,
-        "totalPages": 1,
-        "list": [
-            {
-                "type": "user",
-                "user": {
-                    "id": 10001,
-                    "username": "zhangsan",
-                    "nickname": "张三",
-                    "avatar": "https://example.com/avatar.jpg",
-                    "signature": "这个人很懒",
-                    "followCount": 100,
-                    "fansCount": 2000,
-                    "isFollowing": false
-                }
-            }
-        ]
+        "hasMore": true
     },
     "requestId": "uuid-xxx",
     "timestamp": 1714368000000
@@ -1070,18 +1167,23 @@ Authorization: Bearer {token}
     "code": 200,
     "message": "success",
     "data": {
-        "list": [
+        "items": [
             {
-                "id": 1,
-                "keyword": "热门话题1",
-                "count": 100000
+                "rank": 1,
+                "word": "热门话题1",
+                "hotValue": 1000000,
+                "hotTrend": "up",
+                "searchCount": 100000
             },
             {
-                "id": 2,
-                "keyword": "热门话题2",
-                "count": 80000
+                "rank": 2,
+                "word": "热门话题2",
+                "hotValue": 800000,
+                "hotTrend": "stable",
+                "searchCount": 80000
             }
-        ]
+        ],
+        "updateTime": "2026-04-29T12:00:00"
     },
     "requestId": "uuid-xxx",
     "timestamp": 1714368000000
@@ -1103,14 +1205,18 @@ Authorization: Bearer {token}
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | filename | string | 是 | 文件名 |
-| type | string | 否 | 文件类型: `video` / `image` / `avatar` / `cover` |
+| contentType | string | 是 | 文件MIME类型 (如 `video/mp4`, `image/jpeg`) |
+| type | string | 是 | 文件类型: `video` / `image` / `avatar` / `cover` |
+| fileSize | long | 否 | 文件大小(字节) |
 
 **请求示例**:
 
 ```json
 {
     "filename": "video.mp4",
-    "type": "video"
+    "contentType": "video/mp4",
+    "type": "video",
+    "fileSize": 10485760
 }
 ```
 
@@ -1123,7 +1229,8 @@ Authorization: Bearer {token}
     "data": {
         "uploadToken": "xxx",
         "uploadUrl": "https://upload.example.com",
-        "fileUrl": "https://example.com/videos/xxx.mp4"
+        "fileKey": "videos/2026/04/29/xxx.mp4",
+        "expiresIn": 3600
     },
     "requestId": "uuid-xxx",
     "timestamp": 1714368000000
@@ -1145,7 +1252,7 @@ Authorization: Bearer {token}
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | file | file | 是 | 文件 |
-| type | string | 否 | 文件类型: `video` / `image` / `avatar` / `cover` |
+| type | string | 是 | 文件类型: `video` / `image` / `avatar` / `cover` |
 
 **响应示例**:
 
@@ -1154,10 +1261,8 @@ Authorization: Bearer {token}
     "code": 200,
     "message": "上传成功",
     "data": {
-        "filename": "abc123.jpg",
-        "url": "https://example.com/images/users/10001/abc123.jpg",
-        "size": 102400,
-        "mimeType": "image/jpeg"
+        "fileKey": "images/users/10001/abc123.jpg",
+        "fileUrl": "https://example.com/images/users/10001/abc123.jpg"
     },
     "requestId": "uuid-xxx",
     "timestamp": 1714368000000
@@ -1233,28 +1338,53 @@ Authorization: Bearer {token}
 
 ### A. 数据类型定义
 
-#### UserInfo (用户信息)
+#### UserProfileResponse (用户信息)
 
 ```json
 {
-    "id": 10001,
+    "userId": 10001,
     "username": "zhangsan",
     "nickname": "张三",
     "avatar": "https://example.com/avatar.jpg",
+    "gender": 1,
+    "birthday": "2000-01-01",
     "signature": "这个人很懒",
+    "country": "中国",
+    "province": "北京",
+    "city": "北京市",
     "followCount": 100,
     "fansCount": 2000,
     "likeCount": 5000,
     "videoCount": 50,
-    "isFollowing": false
+    "isFollowing": false,
+    "isFollowed": true,
+    "isMutual": false,
+    "level": 5,
+    "badge": "认证用户",
+    "createTime": "2026-04-29T10:00:00"
 }
 ```
 
-#### VideoInfo (视频信息)
+#### UserInfoDto (用户简略信息)
 
 ```json
 {
-    "id": 1,
+    "userId": 10001,
+    "nickname": "张三",
+    "avatar": "https://example.com/avatar.jpg",
+    "signature": "这个人很懒",
+    "fansCount": 2000,
+    "followCount": 100,
+    "isFollowing": false,
+    "isMutual": false,
+    "level": 1
+}
+```
+
+#### VideoItemResponse (视频信息)
+
+```json
+{
     "videoId": "v1234567890abcdef",
     "author": { ... },
     "title": "视频标题",
@@ -1271,31 +1401,55 @@ Authorization: Bearer {token}
     "viewCount": 50000,
     "isLiked": false,
     "isCollected": false,
+    "topicName": "话题名称",
+    "music": {
+        "musicId": "m001",
+        "title": "背景音乐",
+        "author": "音乐人",
+        "albumCover": "https://example.com/music.jpg"
+    },
     "location": "北京",
-    "createTime": "2026-04-29T10:00:00"
+    "createTime": "2026-04-29T10:00:00",
+    "nextTime": null
 }
 ```
 
-#### CommentInfo (评论信息)
+#### CommentItemResponse (评论信息)
 
 ```json
 {
-    "id": 1000,
-    "videoId": "v1234567890abcdef",
-    "userId": 10001,
+    "commentId": "c1000",
     "user": { ... },
     "content": "评论内容",
     "likeCount": 10,
     "replyCount": 5,
-    "parentId": null,
-    "rootId": null,
     "isLiked": false,
     "createTime": "2026-04-29T10:00:00",
     "replies": []
 }
 ```
 
+#### MusicInfoDto (音乐信息)
+
+```json
+{
+    "musicId": "m001",
+    "title": "背景音乐",
+    "author": "音乐人",
+    "albumCover": "https://example.com/music.jpg"
+}
+```
+
+#### TopicInfoDto (话题信息)
+
+```json
+{
+    "id": 1,
+    "name": "话题名称"
+}
+```
+
 ---
 
-*文档版本：v1.0.1*
+*文档版本：v1.0.2*
 *最后更新：2026年4月*
