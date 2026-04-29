@@ -20,11 +20,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import com.example.douyinandroid.MainActivity
 import com.example.douyinandroid.R
-import com.example.douyinandroid.common.router.RouterConstants
 import com.example.douyinandroid.databinding.FragmentPublishBinding
 import com.google.android.material.chip.Chip
-import com.alibaba.android.arouter.launcher.ARouter
 
 @UnstableApi
 class PublishFragment : Fragment() {
@@ -326,9 +325,11 @@ class PublishFragment : Fragment() {
     }
 
     private fun navigateToMain() {
-        ARouter.getInstance()
-            .build(RouterConstants.PATH_MAIN)
-            .navigation()
+        val intent = Intent(requireContext(), MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        }
+        startActivity(intent)
+        requireActivity().finish()
     }
 
     private fun releasePlayer() {
