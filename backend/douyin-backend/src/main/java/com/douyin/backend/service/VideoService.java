@@ -1,6 +1,7 @@
 package com.douyin.backend.service;
 
 import com.douyin.backend.common.BusinessException;
+import com.douyin.backend.dto.user.UserInfoDto;
 import com.douyin.backend.dto.video.*;
 import com.douyin.backend.entity.Comment;
 import com.douyin.backend.entity.User;
@@ -133,7 +134,27 @@ public class VideoService {
         commentRepository.save(comment);
         video.setCommentCount(commentRepository.countByVideoIdAndStatus(video.getId(), 1));
         videoRepository.save(video);
-        return new CommentResponse("c_" + comment.getId(), comment.getContent(), comment.getLikeCount(), comment.getReplyCount(), false, com.douyin.backend.util.TimeUtils.toIso(comment.getCreateTime()));
+        User user = userRepository.findById(currentUserId).orElseThrow(() -> new BusinessException(404, "用户不存在"));
+        UserInfoDto userInfo = new UserInfoDto(
+            user.getId(),
+            user.getNickname(),
+            user.getAvatar(),
+            user.getSignature(),
+            user.getFansCount(),
+            user.getFollowCount(),
+            false,
+            false,
+            1
+        );
+        return new CommentResponse(
+            "c_" + comment.getId(),
+            userInfo,
+            comment.getContent(),
+            comment.getLikeCount(),
+            comment.getReplyCount(),
+            false,
+            com.douyin.backend.util.TimeUtils.toIso(comment.getCreateTime())
+        );
     }
 
     @Transactional
