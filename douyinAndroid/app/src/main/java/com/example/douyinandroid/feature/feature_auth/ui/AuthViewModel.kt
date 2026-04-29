@@ -4,11 +4,14 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.douyinandroid.common.common_utils.LogUtil
 import com.example.douyinandroid.core.core_auth.AuthPreferences
 import com.example.douyinandroid.domain.model.Result
 import com.example.douyinandroid.domain.repository.AuthRepository
 import com.example.douyinandroid.domain.repository.LoginResult
 import kotlinx.coroutines.launch
+
+private const val TAG = "AuthViewModel"
 
 class AuthViewModel(
     private val authRepository: AuthRepository,
@@ -94,26 +97,32 @@ class AuthViewModel(
 
     fun login() {
         val formState = _loginFormState.value ?: return
+        LogUtil.d(TAG, "login requested: username=${formState.username}")
 
         if (!validateLoginForm()) {
+            LogUtil.w(TAG, "login validation failed: username=${formState.username}")
             return
         }
 
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
+            LogUtil.d(TAG, "login state changed to Loading")
             val result = authRepository.login(formState.username, formState.password)
             handleResult(result)
         }
     }
 
     fun loginByPhone(phone: String, code: String) {
+        LogUtil.d(TAG, "loginByPhone requested: phone=${phone.maskPhone()}, codeLength=${code.length}")
         if (phone.isBlank() || code.length < 4) {
             _uiState.value = AuthUiState.Error("请输入正确的手机号和验证码")
+            LogUtil.w(TAG, "loginByPhone validation failed: phone=${phone.maskPhone()}, codeLength=${code.length}")
             return
         }
 
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
+            LogUtil.d(TAG, "loginByPhone state changed to Loading")
             val result = authRepository.loginByPhone(phone, code)
             handleResult(result)
         }
@@ -121,13 +130,16 @@ class AuthViewModel(
 
     fun register() {
         val formState = _registerFormState.value ?: return
+        LogUtil.d(TAG, "register requested: username=${formState.username}, nickname=${formState.nickname}")
 
         if (!validateRegisterForm()) {
+            LogUtil.w(TAG, "register validation failed: username=${formState.username}")
             return
         }
 
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
+            LogUtil.d(TAG, "register state changed to Loading")
             val result = authRepository.register(
                 username = formState.username,
                 password = formState.password,
@@ -140,11 +152,13 @@ class AuthViewModel(
     }
 
     fun logout() {
+        LogUtil.d(TAG, "logout requested: currentUserId=$currentUserId")
         viewModelScope.launch {
             authRepository.logout()
             _uiState.value = AuthUiState.Idle
             _loginFormState.value = LoginFormState()
             _registerFormState.value = RegisterFormState()
+            LogUtil.d(TAG, "logout completed, form state reset")
         }
     }
 
@@ -243,6 +257,7 @@ class AuthViewModel(
     private fun handleResult(result: Result<LoginResult>) {
         when (result) {
             is Result.Success -> {
+                LogUtil.d(TAG, "auth result success: userId=${result.data.userId}, nickname=${result.data.nickname}")
                 _uiState.value = AuthUiState.LoginSuccess(
                     userId = result.data.userId,
                     nickname = result.data.nickname,
@@ -250,11 +265,13 @@ class AuthViewModel(
                 )
             }
             is Result.Error -> {
+                LogUtil.e(TAG, "auth result error: ${result.message}", result.exception)
                 _uiState.value = AuthUiState.Error(
                     result.message ?: result.exception.message ?: "操作失败，请稍后重试"
                 )
             }
             is Result.Loading -> {
+                LogUtil.d(TAG, "auth result loading")
                 _uiState.value = AuthUiState.Loading
             }
         }
@@ -262,5 +279,14 @@ class AuthViewModel(
 
     fun resetUiState() {
         _uiState.value = AuthUiState.Idle
+        LogUtil.d(TAG, "ui state reset to Idle")
+    }
+
+    private fun String.maskPhone(): String {
+        return if (length >= 7) {
+            take(3) + "****" + takeLast(4)
+        } else {
+            "***"
+        }
     }
 }

@@ -105,34 +105,44 @@ class MainViewModel(
     }
 
     fun loadMoreVideos() {
-        if (!hasMore || isLoadingMore) return
+        if (!hasMore || isLoadingMore) {
+            LogUtil.d(TAG, "loadMoreVideos skipped: hasMore=$hasMore, isLoadingMore=$isLoadingMore")
+            return
+        }
+        LogUtil.d(TAG, "loadMoreVideos started: nextPage=$nextPage")
         isLoadingMore = true
         loadVideos()
     }
 
     fun onVideoChanged(position: Int) {
+        LogUtil.d(TAG, "onVideoChanged: position=$position, total=${_videos.value?.size ?: 0}")
         _currentIndex.value = position
 
         // Preload next videos
         if (position >= (_videos.value?.size ?: 0) - 3) {
+            LogUtil.d(TAG, "Preload threshold reached at position=$position")
             loadMoreVideos()
         }
     }
 
     fun playVideo(videoUrl: String) {
         currentVideoUrl = videoUrl
+        LogUtil.d(TAG, "playVideo requested: url=$videoUrl")
         VideoPlayerManager.instance.playVideo(videoUrl)
     }
 
     fun pauseVideo() {
+        LogUtil.d(TAG, "pauseVideo requested: currentVideoUrl=$currentVideoUrl")
         VideoPlayerManager.instance.pause()
     }
 
     fun resumeVideo() {
+        LogUtil.d(TAG, "resumeVideo requested: currentVideoUrl=$currentVideoUrl")
         VideoPlayerManager.instance.resume()
     }
 
     fun likeVideo(video: Video) {
+        LogUtil.d(TAG, "likeVideo requested: videoId=${video.id}, currentlyLiked=${video.isLiked}, likeCount=${video.likeCount}")
         viewModelScope.launch {
             val result = if (video.isLiked) {
                 videoRepository.unlikeVideo(video.id)
@@ -158,16 +168,21 @@ class MainViewModel(
                         isLiked = !video.isLiked,
                         likeCount = if (video.isLiked) video.likeCount - 1 else video.likeCount + 1
                     )
+                    LogUtil.d(TAG, "likeVideo success: videoId=${video.id}, newLiked=${!video.isLiked}")
                 }
                 is Result.Error -> {
+                    LogUtil.e(TAG, "likeVideo failed: videoId=${video.id}, message=${result.message}", result.exception)
                     _error.value = result.message ?: "操作失败"
                 }
-                is Result.Loading -> {}
+                is Result.Loading -> {
+                    LogUtil.d(TAG, "likeVideo result loading: videoId=${video.id}")
+                }
             }
         }
     }
 
     fun shareVideo(video: Video, platform: String) {
+        LogUtil.d(TAG, "shareVideo requested: videoId=${video.id}, platform=$platform")
         viewModelScope.launch {
             when (val result = videoRepository.shareVideo(video.id, platform)) {
                 is Result.Success -> {
@@ -176,11 +191,15 @@ class MainViewModel(
                         shareUrl = result.data,
                         platform = platform
                     )
+                    LogUtil.d(TAG, "shareVideo success: videoId=${video.id}, platform=$platform")
                 }
                 is Result.Error -> {
+                    LogUtil.e(TAG, "shareVideo failed: videoId=${video.id}, platform=$platform, message=${result.message}", result.exception)
                     _error.value = result.message ?: "分享失败"
                 }
-                is Result.Loading -> {}
+                is Result.Loading -> {
+                    LogUtil.d(TAG, "shareVideo result loading: videoId=${video.id}")
+                }
             }
         }
     }

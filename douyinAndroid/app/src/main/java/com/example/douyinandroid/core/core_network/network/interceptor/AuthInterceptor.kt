@@ -26,19 +26,26 @@ class AuthInterceptor(
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
+        val appVersion = getAppVersion()
+        val deviceId = getDeviceId()
 
         val requestBuilder = originalRequest.newBuilder()
             .header(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
             .header(HEADER_ACCEPT, ACCEPT_JSON)
             .header(HEADER_X_PLATFORM, PLATFORM)
-            .header(HEADER_X_APP_VERSION, getAppVersion())
-            .header(HEADER_X_DEVICE_ID, getDeviceId())
+            .header(HEADER_X_APP_VERSION, appVersion)
+            .header(HEADER_X_DEVICE_ID, deviceId)
 
         // 添加 Token
         getToken()?.let { token ->
             requestBuilder.header(HEADER_AUTHORIZATION, TOKEN_PREFIX + token)
-            LogUtil.d(TAG, "Token added to request")
-        } ?: LogUtil.d(TAG, "No token available")
+            LogUtil.d(TAG, "Token added to request: url=${originalRequest.url.encodedPath}, tokenLength=${token.length}")
+        } ?: LogUtil.d(TAG, "No token available for request: url=${originalRequest.url.encodedPath}")
+
+        LogUtil.d(
+            TAG,
+            "Common headers prepared: url=${originalRequest.url.encodedPath}, platform=$PLATFORM, appVersion=$appVersion, deviceIdLength=${deviceId.length}"
+        )
 
         val request = requestBuilder.build()
         return chain.proceed(request)

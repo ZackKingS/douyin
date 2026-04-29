@@ -3,6 +3,7 @@ package com.example.douyinandroid.core.core_network.network
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
+import com.example.douyinandroid.common.common_utils.LogUtil
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import okio.BufferedSink
@@ -15,10 +16,15 @@ class ContentUriRequestBody(
     private val onProgress: ((Int) -> Unit)? = null
 ) : RequestBody() {
 
+    companion object {
+        private const val TAG = "ContentUriRequestBody"
+    }
+
     private var contentLength: Long = 0L
 
     init {
         contentLength = getContentLength()
+        LogUtil.d(TAG, "Created request body: uri=$uri, mediaType=$mediaType, contentLength=$contentLength")
     }
 
     private fun getContentLength(): Long {
@@ -27,6 +33,7 @@ class ContentUriRequestBody(
                 pfd.statSize
             } ?: 0L
         } catch (e: Exception) {
+            LogUtil.w(TAG, "Failed to read content length for uri=$uri: ${e.message}")
             0L
         }
     }
@@ -39,6 +46,7 @@ class ContentUriRequestBody(
                 name = cursor.getString(nameIndex) ?: "file"
             }
         }
+        LogUtil.d(TAG, "Resolved file name: $name")
         return name
     }
 
@@ -49,6 +57,7 @@ class ContentUriRequestBody(
     override fun writeTo(sink: BufferedSink) {
         val totalBytes = contentLength()
         var bytesWritten = 0L
+        LogUtil.d(TAG, "Start writing request body: uri=$uri, totalBytes=$totalBytes")
 
         context.contentResolver.openInputStream(uri)?.use { inputStream ->
             val buffer = ByteArray(8192)
@@ -64,6 +73,7 @@ class ContentUriRequestBody(
                 }
             }
             sink.flush()
+            LogUtil.d(TAG, "Finished writing request body: uri=$uri, bytesWritten=$bytesWritten")
         } ?: throw IOException("Could not open input stream for $uri")
     }
 }

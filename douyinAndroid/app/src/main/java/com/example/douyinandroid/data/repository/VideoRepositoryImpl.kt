@@ -50,86 +50,107 @@ class VideoRepositoryImpl(
     }
 
     override suspend fun getVideoDetail(videoId: String): Result<Video> {
+        LogUtil.d(TAG, "getVideoDetail called: videoId=$videoId")
         return withContext(Dispatchers.IO) {
             try {
                 val response = apiService.getVideoDetail(videoId)
                 if (response.isSuccess && response.data != null) {
                     val video = response.data.toDomain()
+                    LogUtil.d(TAG, "getVideoDetail success: videoId=${video.id}, title=${video.title}")
                     Result.Success(video)
                 } else {
+                    LogUtil.w(TAG, "getVideoDetail failed: videoId=$videoId, code=${response.code}, message=${response.message}")
                     Result.Error(Exception(response.message), response.message)
                 }
             } catch (e: Exception) {
+                LogUtil.e(TAG, "getVideoDetail exception: videoId=$videoId", e)
                 Result.Error(e, e.message)
             }
         }
     }
 
     override suspend fun likeVideo(videoId: String): Result<Unit> {
+        LogUtil.d(TAG, "likeVideo called: videoId=$videoId")
         return withContext(Dispatchers.IO) {
             try {
                 val response = apiService.likeVideo(videoId)
                 if (response.isSuccess) {
                     videoDao.updateLikeStatus(videoId, true, 1)
+                    LogUtil.d(TAG, "likeVideo success and local cache updated: videoId=$videoId")
                     Result.Success(Unit)
                 } else {
+                    LogUtil.w(TAG, "likeVideo failed: videoId=$videoId, code=${response.code}, message=${response.message}")
                     Result.Error(Exception(response.message), response.message)
                 }
             } catch (e: Exception) {
+                LogUtil.e(TAG, "likeVideo exception: videoId=$videoId", e)
                 Result.Error(e, e.message)
             }
         }
     }
 
     override suspend fun unlikeVideo(videoId: String): Result<Unit> {
+        LogUtil.d(TAG, "unlikeVideo called: videoId=$videoId")
         return withContext(Dispatchers.IO) {
             try {
                 val response = apiService.unlikeVideo(videoId)
                 if (response.isSuccess) {
                     videoDao.updateLikeStatus(videoId, false, -1)
+                    LogUtil.d(TAG, "unlikeVideo success and local cache updated: videoId=$videoId")
                     Result.Success(Unit)
                 } else {
+                    LogUtil.w(TAG, "unlikeVideo failed: videoId=$videoId, code=${response.code}, message=${response.message}")
                     Result.Error(Exception(response.message), response.message)
                 }
             } catch (e: Exception) {
+                LogUtil.e(TAG, "unlikeVideo exception: videoId=$videoId", e)
                 Result.Error(e, e.message)
             }
         }
     }
 
     override suspend fun shareVideo(videoId: String, platform: String): Result<String> {
+        LogUtil.d(TAG, "shareVideo called: videoId=$videoId, platform=$platform")
         return withContext(Dispatchers.IO) {
             try {
                 // New API doesn't have share endpoint, return video URL
                 val response = apiService.getVideoDetail(videoId)
                 if (response.isSuccess && response.data != null) {
+                    LogUtil.d(TAG, "shareVideo success: videoId=$videoId, platform=$platform")
                     Result.Success(response.data.videoUrl)
                 } else {
+                    LogUtil.w(TAG, "shareVideo failed: videoId=$videoId, platform=$platform, code=${response.code}, message=${response.message}")
                     Result.Error(Exception(response.message), response.message)
                 }
             } catch (e: Exception) {
+                LogUtil.e(TAG, "shareVideo exception: videoId=$videoId, platform=$platform", e)
                 Result.Error(e, e.message)
             }
         }
     }
 
     override suspend fun getVideoComments(videoId: String, page: Int, size: Int): Result<List<Comment>> {
+        LogUtil.d(TAG, "getVideoComments called: videoId=$videoId, page=$page, size=$size")
         return withContext(Dispatchers.IO) {
             try {
                 val response = apiService.getVideoComments(videoId, page, size)
                 if (response.isSuccess && response.data != null) {
                     val comments = response.data.list?.map { it.toDomain() } ?: emptyList()
+                    LogUtil.d(TAG, "getVideoComments success: videoId=$videoId, count=${comments.size}")
                     Result.Success(comments)
                 } else {
+                    LogUtil.w(TAG, "getVideoComments failed: videoId=$videoId, code=${response.code}, message=${response.message}")
                     Result.Error(Exception(response.message), response.message)
                 }
             } catch (e: Exception) {
+                LogUtil.e(TAG, "getVideoComments exception: videoId=$videoId", e)
                 Result.Error(e, e.message)
             }
         }
     }
 
     override suspend fun postComment(videoId: String, content: String, parentId: String?): Result<Comment> {
+        LogUtil.d(TAG, "postComment called: videoId=$videoId, contentLength=${content.length}, parentId=$parentId")
         return withContext(Dispatchers.IO) {
             try {
                 val request = CommentCreateRequest(
@@ -139,11 +160,14 @@ class VideoRepositoryImpl(
                 )
                 val response = apiService.createComment(request)
                 if (response.isSuccess && response.data != null) {
+                    LogUtil.d(TAG, "postComment success: videoId=$videoId, commentId=${response.data.id}")
                     Result.Success(response.data.toDomain())
                 } else {
+                    LogUtil.w(TAG, "postComment failed: videoId=$videoId, code=${response.code}, message=${response.message}")
                     Result.Error(Exception(response.message), response.message)
                 }
             } catch (e: Exception) {
+                LogUtil.e(TAG, "postComment exception: videoId=$videoId", e)
                 Result.Error(e, e.message)
             }
         }
@@ -162,15 +186,20 @@ class VideoRepositoryImpl(
     }
 
     override suspend fun getVideosByAuthor(authorId: Long): List<Video> {
+        LogUtil.d(TAG, "getVideosByAuthor called: authorId=$authorId")
         return withContext(Dispatchers.IO) {
             try {
                 val response = apiService.getUserVideos(authorId)
                 if (response.isSuccess && response.data != null) {
-                    response.data.list?.map { it.toDomain() } ?: emptyList()
+                    val videos = response.data.list?.map { it.toDomain() } ?: emptyList()
+                    LogUtil.d(TAG, "getVideosByAuthor success: authorId=$authorId, count=${videos.size}")
+                    videos
                 } else {
+                    LogUtil.w(TAG, "getVideosByAuthor failed: authorId=$authorId, code=${response.code}, message=${response.message}")
                     emptyList()
                 }
             } catch (e: Exception) {
+                LogUtil.e(TAG, "getVideosByAuthor exception: authorId=$authorId", e)
                 emptyList()
             }
         }
