@@ -157,15 +157,17 @@ data class VideoActionResponse(
 // ==================== 评论相关 ====================
 
 data class CommentCreateRequest(
-    @SerializedName("videoId")
-    val videoId: Long,
     @SerializedName("content")
     val content: String,
     @SerializedName("parentId")
-    val parentId: Long? = null
+    val parentId: String? = null,
+    @SerializedName("atUserIds")
+    val atUserIds: String? = null
 )
 
 data class CommentListPageResponse(
+    @SerializedName("items")
+    val items: List<CommentItem>?,
     @SerializedName("page")
     val page: Int,
     @SerializedName("size")
@@ -173,18 +175,22 @@ data class CommentListPageResponse(
     @SerializedName("total")
     val total: Int,
     @SerializedName("totalPages")
-    val totalPages: Int,
+    val totalPages: Int? = null,
     @SerializedName("list")
-    val list: List<CommentItem>?
-)
+    val legacyList: List<CommentItem>? = null,
+    @SerializedName("hasMore")
+    val hasMore: Boolean = false
+) {
+    val list: List<CommentItem>? get() = items ?: legacyList
+}
 
 data class CommentItem(
-    @SerializedName("id")
-    val id: Long,
+    @SerializedName("commentId")
+    val commentId: String,
     @SerializedName("videoId")
-    val videoId: Long,
+    val videoId: Long? = null,
     @SerializedName("userId")
-    val userId: Long,
+    val userId: Long? = null,
     @SerializedName("user")
     val user: VideoAuthor?,
     @SerializedName("content")
@@ -194,9 +200,9 @@ data class CommentItem(
     @SerializedName("replyCount")
     val replyCount: Long,
     @SerializedName("parentId")
-    val parentId: Long?,
+    val parentId: Long? = null,
     @SerializedName("rootId")
-    val rootId: Long?,
+    val rootId: Long? = null,
     @SerializedName("isLiked")
     val isLiked: Boolean,
     @SerializedName("createTime")
@@ -206,14 +212,14 @@ data class CommentItem(
 )
 
 data class CommentResponse(
-    @SerializedName("id")
-    val id: Long,
+    @SerializedName("commentId")
+    val commentId: String,
     @SerializedName("videoId")
-    val videoId: Long,
+    val videoId: Long? = null,
     @SerializedName("userId")
-    val userId: Long,
+    val userId: Long? = null,
     @SerializedName("user")
-    val user: VideoAuthor?,
+    val user: VideoAuthor? = null,
     @SerializedName("content")
     val content: String,
     @SerializedName("likeCount")
@@ -221,9 +227,9 @@ data class CommentResponse(
     @SerializedName("replyCount")
     val replyCount: Long,
     @SerializedName("parentId")
-    val parentId: Long?,
+    val parentId: Long? = null,
     @SerializedName("rootId")
-    val rootId: Long?,
+    val rootId: Long? = null,
     @SerializedName("createTime")
     val createTime: String?
 )

@@ -33,7 +33,7 @@ object ApiConstants {
         const val USER_FOLLOWING = "users/{userId}/following"
 
         // Comment endpoints
-        const val COMMENT_CREATE = "comments"
+        const val COMMENT_CREATE = "videos/{videoId}/comments"
         const val COMMENT_DELETE = "comments/{commentId}"
         const val COMMENT_LIKE = "comments/{commentId}/like"
         const val COMMENT_UNLIKE = "comments/{commentId}/like"

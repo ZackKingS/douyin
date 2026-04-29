@@ -128,6 +128,7 @@ interface ApiService {
 
     @POST(ApiConstants.Endpoints.COMMENT_CREATE)
     suspend fun createComment(
+        @Path("videoId") videoId: String,
         @Body comment: CommentCreateRequest
     ): ApiResponse<CommentResponse>
 

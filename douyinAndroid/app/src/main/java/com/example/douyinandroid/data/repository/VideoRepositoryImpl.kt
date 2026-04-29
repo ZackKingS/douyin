@@ -154,13 +154,12 @@ class VideoRepositoryImpl(
         return withContext(Dispatchers.IO) {
             try {
                 val request = CommentCreateRequest(
-                    videoId = videoId.toLongOrNull() ?: 0L,
                     content = content,
-                    parentId = parentId?.toLongOrNull()
+                    parentId = parentId
                 )
-                val response = apiService.createComment(request)
+                val response = apiService.createComment(videoId, request)
                 if (response.isSuccess && response.data != null) {
-                    LogUtil.d(TAG, "postComment success: videoId=$videoId, commentId=${response.data.id}")
+                    LogUtil.d(TAG, "postComment success: videoId=$videoId, commentId=${response.data.commentId}")
                     Result.Success(response.data.toDomain())
                 } else {
                     LogUtil.w(TAG, "postComment failed: videoId=$videoId, code=${response.code}, message=${response.message}")
@@ -288,7 +287,7 @@ private fun com.example.douyinandroid.core.core_network.network.bean.VideoAuthor
 
 private fun CommentItem.toDomain(): Comment {
     return Comment(
-        commentId = id.toString(),
+        commentId = commentId,
         user = user?.toDomain(),
         content = content,
         likeCount = likeCount,
@@ -301,7 +300,7 @@ private fun CommentItem.toDomain(): Comment {
 
 private fun com.example.douyinandroid.core.core_network.network.bean.CommentResponse.toDomain(): Comment {
     return Comment(
-        commentId = id.toString(),
+        commentId = commentId,
         user = user?.toDomain(),
         content = content,
         likeCount = likeCount,

@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.douyinandroid.common.common_utils.LogUtil
+import com.example.douyinandroid.domain.model.Comment
 import com.example.douyinandroid.domain.model.Result
 import com.example.douyinandroid.domain.model.Video
 import com.example.douyinandroid.domain.repository.VideoRepository
@@ -37,6 +38,15 @@ class MainViewModel(
 
     private val _shareEvent = MutableLiveData<ShareEvent?>()
     val shareEvent: LiveData<ShareEvent?> = _shareEvent
+
+    private val _commentEvent = MutableLiveData<CommentEvent?>()
+    val commentEvent: LiveData<CommentEvent?> = _commentEvent
+
+    private val _comments = MutableLiveData<List<Comment>>(emptyList())
+    val comments: LiveData<List<Comment>> = _comments
+
+    private val _isCommentsLoading = MutableLiveData<Boolean>(false)
+    val isCommentsLoading: LiveData<Boolean> = _isCommentsLoading
 
     private var nextPage = 1
     private var hasMore = true
@@ -204,12 +214,92 @@ class MainViewModel(
         }
     }
 
+    fun postComment(video: Video, content: String) {
+        val trimmedContent = content.trim()
+        if (trimmedContent.isEmpty()) {
+            _commentEvent.value = CommentEvent(
+                videoId = video.id,
+                isSuccess = false,
+                message = "评论不能为空"
+            )
+            return
+        }
+
+        LogUtil.d(TAG, "postComment requested: videoId=${video.id}, contentLength=${trimmedContent.length}")
+        viewModelScope.launch {
+            when (val result = videoRepository.postComment(video.id, trimmedContent)) {
+                is Result.Success -> {
+                    _comments.value = listOf(result.data) + (_comments.value ?: emptyList())
+
+                    val updatedVideos = _videos.value?.map {
+                        if (it.id == video.id) {
+                            it.copy(commentCount = it.commentCount + 1)
+                        } else {
+                            it
+                        }
+                    }
+                    _videos.value = updatedVideos
+
+                    _commentEvent.value = CommentEvent(
+                        videoId = video.id,
+                        isSuccess = true,
+                        message = "评论成功"
+                    )
+                    LogUtil.d(TAG, "postComment success: videoId=${video.id}, commentId=${result.data.commentId}")
+                }
+                is Result.Error -> {
+                    val message = result.message ?: "评论失败"
+                    _commentEvent.value = CommentEvent(
+                        videoId = video.id,
+                        isSuccess = false,
+                        message = message
+                    )
+                    LogUtil.e(TAG, "postComment failed: videoId=${video.id}, message=$message", result.exception)
+                }
+                is Result.Loading -> {
+                    LogUtil.d(TAG, "postComment result loading: videoId=${video.id}")
+                }
+            }
+        }
+    }
+
+    fun loadComments(videoId: String) {
+        LogUtil.d(TAG, "loadComments requested: videoId=$videoId")
+        _isCommentsLoading.value = true
+        viewModelScope.launch {
+            when (val result = videoRepository.getVideoComments(videoId)) {
+                is Result.Success -> {
+                    _comments.value = result.data
+                    _isCommentsLoading.value = false
+                    LogUtil.d(TAG, "loadComments success: videoId=$videoId, count=${result.data.size}")
+                }
+                is Result.Error -> {
+                    _comments.value = emptyList()
+                    _isCommentsLoading.value = false
+                    _commentEvent.value = CommentEvent(
+                        videoId = videoId,
+                        isSuccess = false,
+                        message = result.message ?: "评论加载失败"
+                    )
+                    LogUtil.e(TAG, "loadComments failed: videoId=$videoId", result.exception)
+                }
+                is Result.Loading -> {
+                    LogUtil.d(TAG, "loadComments result loading: videoId=$videoId")
+                }
+            }
+        }
+    }
+
     fun onLikeEventHandled() {
         _likeEvent.value = null
     }
 
     fun onShareEventHandled() {
         _shareEvent.value = null
+    }
+
+    fun onCommentEventHandled() {
+        _commentEvent.value = null
     }
 
     fun clearError() {
@@ -226,5 +316,11 @@ class MainViewModel(
         val videoId: String,
         val shareUrl: String,
         val platform: String
+    )
+
+    data class CommentEvent(
+        val videoId: String,
+        val isSuccess: Boolean,
+        val message: String
     )
 }
