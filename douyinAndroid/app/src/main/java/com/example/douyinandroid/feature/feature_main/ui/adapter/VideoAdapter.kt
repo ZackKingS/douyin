@@ -1,5 +1,7 @@
 package com.example.douyinandroid.feature.feature_main.ui.adapter
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,6 +15,7 @@ import com.example.douyinandroid.R
 import com.example.douyinandroid.common.common_utils.LogUtil
 import com.example.douyinandroid.databinding.ItemVideoBinding
 import com.example.douyinandroid.domain.model.Video
+import com.example.douyinandroid.core.core_video.video.VideoPlayerManager
 
 private const val TAG = "VideoAdapter"
 private const val PAYLOAD_ATTACH_PLAYER = "attach_player"
@@ -145,10 +148,16 @@ class VideoAdapter(
                 video?.let { onFollowClick(it) }
             }
 
-            // Double tap to like
-            binding.playerView.setOnClickListener { /* Prevent click */ }
+            binding.playerView.setOnClickListener {
+                togglePlayPause()
+            }
 
             binding.layoutVideo.setOnClickListener {
+                togglePlayPause()
+            }
+
+            // Also handle click on cover image and PlayerView
+            binding.ivCover.setOnClickListener {
                 togglePlayPause()
             }
         }
@@ -231,13 +240,34 @@ class VideoAdapter(
         }
 
         private fun togglePlayPause() {
-            exoPlayer?.let { player ->
-                if (player.isPlaying) {
-                    player.pause()
+            val player = VideoPlayerManager.instance.getPlayer()
+            player?.let {
+                if (it.isPlaying) {
+                    it.pause()
+                    showPlayPauseIcon(true)
                 } else {
-                    player.play()
+                    it.play()
+                    showPlayPauseIcon(false)
                 }
             }
+        }
+
+        private fun showPlayPauseIcon(isPaused: Boolean) {
+            val iconRes = if (isPaused) R.drawable.ic_play else R.drawable.ic_pause
+            binding.ivPlayPause.setImageResource(iconRes)
+            binding.ivPlayPause.visibility = View.VISIBLE
+            binding.ivPlayPause.alpha = 1f
+
+            binding.ivPlayPause.animate()
+                .alpha(0f)
+                .setDuration(500)
+                .setStartDelay(300)
+                .setListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        binding.ivPlayPause.visibility = View.GONE
+                    }
+                })
+                .start()
         }
 
         fun showLoading() {
