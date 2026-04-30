@@ -92,9 +92,6 @@ class MainFragment : Fragment() {
             viewModel.loadVideos(refresh = true)
         }
 
-        binding.fabPublish.setOnClickListener {
-            navigateToPublish()
-        }
     }
 
     private fun setupAdapter() {

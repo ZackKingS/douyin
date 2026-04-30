@@ -1,19 +1,28 @@
 package com.example.douyinandroid
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
+import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.Fragment
 import com.example.douyinandroid.core.core_auth.AuthPreferences
 import com.example.douyinandroid.core.core_video.video.VideoPlayerManager
 import com.example.douyinandroid.feature.feature_auth.ui.LoginActivity
 import com.example.douyinandroid.feature.feature_main.ui.MainFragment
+import com.example.douyinandroid.feature.feature_main.ui.SimpleTabFragment
+import com.example.douyinandroid.feature.feature_publish.ui.PublishActivity
+import com.google.android.material.button.MaterialButton
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var authPreferences: AuthPreferences
+    private lateinit var tabs: Map<MainTab, TextView>
+    private lateinit var publishTab: MaterialButton
+    private var currentTab = MainTab.HOME
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,10 +45,61 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+        setupBottomNavigation()
+
         if (savedInstanceState == null) {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.main, MainFragment.newInstance())
-                .commit()
+            showTab(MainTab.HOME)
+        } else {
+            updateSelectedTab(currentTab)
+        }
+    }
+
+    private fun setupBottomNavigation() {
+        tabs = mapOf(
+            MainTab.HOME to findViewById(R.id.tabHome),
+            MainTab.FRIENDS to findViewById(R.id.tabFriends),
+            MainTab.MESSAGE to findViewById(R.id.tabMessage),
+            MainTab.ME to findViewById(R.id.tabMe)
+        )
+        publishTab = findViewById(R.id.tabPublish)
+
+        tabs.forEach { (tab, view) ->
+            view.setOnClickListener {
+                showTab(tab)
+            }
+        }
+        publishTab.setOnClickListener {
+            navigateToPublish()
+        }
+
+        updateSelectedTab(MainTab.HOME)
+    }
+
+    private fun showTab(tab: MainTab) {
+        currentTab = tab
+        if (tab != MainTab.HOME) {
+            VideoPlayerManager.instance.pause()
+        }
+
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, createFragment(tab))
+            .commit()
+        updateSelectedTab(tab)
+    }
+
+    private fun createFragment(tab: MainTab): Fragment {
+        return when (tab) {
+            MainTab.HOME -> MainFragment.newInstance()
+            MainTab.FRIENDS -> SimpleTabFragment.newInstance("朋友", "好友动态正在建设中")
+            MainTab.MESSAGE -> SimpleTabFragment.newInstance("消息", "消息列表正在建设中")
+            MainTab.ME -> SimpleTabFragment.newInstance("我", "个人主页正在建设中")
+        }
+    }
+
+    private fun updateSelectedTab(selectedTab: MainTab) {
+        if (!::tabs.isInitialized) return
+        tabs.forEach { (tab, view) ->
+            view.setTextColor(if (tab == selectedTab) Color.WHITE else Color.parseColor("#B3FFFFFF"))
         }
     }
 
@@ -48,14 +108,18 @@ class MainActivity : AppCompatActivity() {
         startActivityForResult(intent, REQUEST_LOGIN)
     }
 
+    private fun navigateToPublish() {
+        VideoPlayerManager.instance.pause()
+        startActivity(Intent(this, PublishActivity::class.java))
+    }
+
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_LOGIN) {
             if (resultCode == RESULT_OK) {
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.main, MainFragment.newInstance())
-                    .commit()
+                setupBottomNavigation()
+                showTab(MainTab.HOME)
             } else {
                 finish()
             }
@@ -69,5 +133,12 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val REQUEST_LOGIN = 1001
+    }
+
+    private enum class MainTab {
+        HOME,
+        FRIENDS,
+        MESSAGE,
+        ME
     }
 }
