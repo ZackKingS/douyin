@@ -26,6 +26,7 @@ import java.util.Locale
 private const val TAG = "VideoAdapter"
 private const val PAYLOAD_ATTACH_PLAYER = "attach_player"
 private const val PAYLOAD_DETACH_PLAYER = "detach_player"
+private const val PAYLOAD_INTERACTION_STATE = "interaction_state"
 
 @UnstableApi
 class VideoAdapter(
@@ -59,10 +60,19 @@ class VideoAdapter(
         position: Int,
         payloads: MutableList<Any>
     ) {
-        when {
-            payloads.contains(PAYLOAD_DETACH_PLAYER) -> holder.detachPlayer()
-            payloads.contains(PAYLOAD_ATTACH_PLAYER) -> holder.attachPlayer(currentPlayer)
-            else -> super.onBindViewHolder(holder, position, payloads)
+        if (payloads.isEmpty()) {
+            super.onBindViewHolder(holder, position, payloads)
+            return
+        }
+
+        if (payloads.contains(PAYLOAD_INTERACTION_STATE)) {
+            holder.bindInteractionState(getItem(position))
+        }
+        if (payloads.contains(PAYLOAD_DETACH_PLAYER)) {
+            holder.detachPlayer()
+        }
+        if (payloads.contains(PAYLOAD_ATTACH_PLAYER)) {
+            holder.attachPlayer(currentPlayer)
         }
     }
 
@@ -269,6 +279,16 @@ class VideoAdapter(
             }
         }
 
+        fun bindInteractionState(item: Video) {
+            video = item
+            with(binding) {
+                tvLikeCount.text = item.formattedLikeCount
+                tvCommentCount.text = item.formattedCommentCount
+                tvShareCount.text = item.formattedShareCount
+                updateLikeState(item.isLiked)
+            }
+        }
+
         private fun updateLikeState(isLiked: Boolean) {
             binding.ivLike.setImageResource(
                 if (isLiked) R.drawable.ic_liked else R.drawable.ic_like
@@ -426,6 +446,21 @@ class VideoAdapter(
 
         override fun areContentsTheSame(oldItem: Video, newItem: Video): Boolean {
             return oldItem == newItem
+        }
+
+        override fun getChangePayload(oldItem: Video, newItem: Video): Any? {
+            val onlyInteractionChanged = oldItem.copy(
+                likeCount = newItem.likeCount,
+                commentCount = newItem.commentCount,
+                shareCount = newItem.shareCount,
+                isLiked = newItem.isLiked
+            ) == newItem
+
+            return if (onlyInteractionChanged) {
+                PAYLOAD_INTERACTION_STATE
+            } else {
+                null
+            }
         }
     }
 }

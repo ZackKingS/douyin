@@ -50,6 +50,7 @@ class MainFragment : Fragment() {
     private var commentSubmitButton: Button? = null
     private var commentListContainer: LinearLayout? = null
     private var commentLoadingView: ProgressBar? = null
+    private var currentPlayingVideoId: String? = null
 
     private val pageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
         override fun onPageSelected(position: Int) {
@@ -193,8 +194,10 @@ class MainFragment : Fragment() {
             val video = videos[position]
             viewModel.onVideoChanged(position)
             viewModel.playVideo(video.videoUrl)
+            currentPlayingVideoId = video.id
             videoAdapter.setCurrentPlayingPosition(position, VideoPlayerManager.instance.getPlayer())
         } else {
+            currentPlayingVideoId = null
             videoAdapter.setCurrentPlayingPosition(-1, null)
         }
     }
@@ -203,12 +206,14 @@ class MainFragment : Fragment() {
         if (videos.isEmpty()) {
             pendingScrollToFirstVideo = false
             videoAdapter.setCurrentPlayingPosition(-1, null)
+            currentPlayingVideoId = null
             viewModel.pauseVideo()
             return
         }
 
         val currentPage = binding.viewPagerVideo.currentItem
-        val targetPage = if (pendingScrollToFirstVideo) {
+        val shouldScrollToFirstVideo = pendingScrollToFirstVideo
+        val targetPage = if (shouldScrollToFirstVideo) {
             0
         } else {
             currentPage.coerceIn(videos.indices)
@@ -217,6 +222,12 @@ class MainFragment : Fragment() {
 
         if (currentPage != targetPage) {
             binding.viewPagerVideo.setCurrentItem(targetPage, false)
+        }
+
+        val targetVideo = videos[targetPage]
+        if (!shouldScrollToFirstVideo && currentPage == targetPage && currentPlayingVideoId == targetVideo.id) {
+            videoAdapter.setCurrentPlayingPosition(targetPage, VideoPlayerManager.instance.getPlayer())
+            return
         }
         playVideoAtPosition(targetPage)
     }
