@@ -19,11 +19,6 @@ interface ApiService {
         @Path("videoId") videoId: String
     ): ApiResponse<VideoDetailResponse>
 
-    @DELETE(ApiConstants.Endpoints.VIDEO_DETAIL)
-    suspend fun deleteVideo(
-        @Path("videoId") videoId: String
-    ): ApiResponse<Unit>
-
     @POST(ApiConstants.Endpoints.VIDEO_LIKE)
     suspend fun likeVideo(
         @Path("videoId") videoId: String
@@ -34,27 +29,11 @@ interface ApiService {
         @Path("videoId") videoId: String
     ): ApiResponse<VideoActionResponse>
 
-    @POST(ApiConstants.Endpoints.VIDEO_COLLECT)
-    suspend fun collectVideo(
-        @Path("videoId") videoId: String
-    ): ApiResponse<VideoActionResponse>
-
-    @DELETE(ApiConstants.Endpoints.VIDEO_UNCOLLECT)
-    suspend fun uncollectVideo(
-        @Path("videoId") videoId: String
-    ): ApiResponse<Unit>
-
-    @GET(ApiConstants.Endpoints.VIDEO_MY_LIKES)
-    suspend fun getMyLikes(
-        @Query("page") page: Int = 1,
-        @Query("size") size: Int = 20
-    ): ApiResponse<VideoListPageResponse>
-
-    @GET(ApiConstants.Endpoints.VIDEO_MY_COLLECTS)
-    suspend fun getMyCollects(
-        @Query("page") page: Int = 1,
-        @Query("size") size: Int = 20
-    ): ApiResponse<VideoListPageResponse>
+    @POST(ApiConstants.Endpoints.VIDEO_SHARE)
+    suspend fun shareVideo(
+        @Path("videoId") videoId: String,
+        @Query("platform") platform: String = "copy"
+    ): ApiResponse<ShareResponse>
 
     @GET(ApiConstants.Endpoints.VIDEO_USER)
     suspend fun getUserVideos(
@@ -85,7 +64,7 @@ interface ApiService {
     @POST(ApiConstants.Endpoints.USER_REFRESH)
     suspend fun refreshToken(
         @Body refreshRequest: RefreshTokenRequest
-    ): ApiResponse<TokenResponse>
+    ): ApiResponse<LoginResponse>
 
     @POST(ApiConstants.Endpoints.USER_LOGOUT)
     suspend fun logout(): ApiResponse<Unit>
@@ -98,7 +77,7 @@ interface ApiService {
     @PUT(ApiConstants.Endpoints.USER_UPDATE)
     suspend fun updateUserInfo(
         @Body updateRequest: UserUpdateRequest
-    ): ApiResponse<Unit>
+    ): ApiResponse<UserInfoResponse>
 
     @GET(ApiConstants.Endpoints.USER_FOLLOWERS)
     suspend fun getUserFollowers(
@@ -122,7 +101,7 @@ interface ApiService {
     @DELETE(ApiConstants.Endpoints.USER_UNFOLLOW)
     suspend fun unfollowUser(
         @Path("userId") userId: Long
-    ): ApiResponse<Unit>
+    ): ApiResponse<FollowActionResponse>
 
     // ==================== 评论相关 ====================
 
@@ -131,21 +110,6 @@ interface ApiService {
         @Path("videoId") videoId: String,
         @Body comment: CommentCreateRequest
     ): ApiResponse<CommentResponse>
-
-    @DELETE(ApiConstants.Endpoints.COMMENT_DELETE)
-    suspend fun deleteComment(
-        @Path("commentId") commentId: Long
-    ): ApiResponse<Unit>
-
-    @POST(ApiConstants.Endpoints.COMMENT_LIKE)
-    suspend fun likeComment(
-        @Path("commentId") commentId: Long
-    ): ApiResponse<CommentActionResponse>
-
-    @DELETE(ApiConstants.Endpoints.COMMENT_UNLIKE)
-    suspend fun unlikeComment(
-        @Path("commentId") commentId: Long
-    ): ApiResponse<CommentActionResponse>
 
     // ==================== 上传相关 ====================
 

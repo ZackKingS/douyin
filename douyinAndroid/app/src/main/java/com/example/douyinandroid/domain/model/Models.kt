@@ -57,6 +57,8 @@ data class User(
     val signature: String? = null,
     val fansCount: Long = 0,
     val followCount: Long = 0,
+    val likeCount: Long = 0,
+    val videoCount: Long = 0,
     val isFollowing: Boolean = false,
     val isMutual: Boolean = false,
     val level: Int = 0
@@ -66,6 +68,12 @@ data class User(
 
     val formattedFollowCount: String
         get() = formatCount(followCount)
+
+    val formattedLikeCount: String
+        get() = formatCount(likeCount)
+
+    val formattedVideoCount: String
+        get() = formatCount(videoCount)
 
     private fun formatCount(count: Long): String {
         return when {

@@ -156,6 +156,8 @@ private fun com.example.douyinandroid.core.core_network.network.bean.UserInfoRes
         signature = signature,
         fansCount = fansCount,
         followCount = followCount,
+        likeCount = likeCount,
+        videoCount = videoCount,
         isFollowing = isFollowing
     )
 }
@@ -204,6 +206,8 @@ private fun com.example.douyinandroid.core.core_database.database.entity.UserEnt
         signature = signature,
         fansCount = fansCount,
         followCount = followCount,
+        likeCount = likeCount,
+        videoCount = videoCount,
         isFollowing = isFollowing
     )
 }

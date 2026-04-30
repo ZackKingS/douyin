@@ -147,11 +147,20 @@ data class VideoAuthor(
 
 data class VideoActionResponse(
     @SerializedName("videoId")
-    val videoId: String,
+    val videoId: String? = null,
+    @SerializedName("isLiked")
+    val isLiked: Boolean? = null,
     @SerializedName("likeCount")
     val likeCount: Long? = null,
     @SerializedName("collectCount")
     val collectCount: Long? = null
+)
+
+data class ShareResponse(
+    @SerializedName("shareUrl")
+    val shareUrl: String?,
+    @SerializedName("shareCount")
+    val shareCount: Long = 0
 )
 
 // ==================== 评论相关 ====================
@@ -244,7 +253,7 @@ data class CommentActionResponse(
 // ==================== 用户信息 (简版，用于视频/评论中的用户) ====================
 
 data class UserInfo(
-    @SerializedName("id")
+    @SerializedName(value = "userId", alternate = ["id"])
     val id: Long,
     @SerializedName("username")
     val username: String?,

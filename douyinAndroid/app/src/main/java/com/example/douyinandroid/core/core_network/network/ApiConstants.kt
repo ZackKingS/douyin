@@ -13,12 +13,9 @@ object ApiConstants {
         const val VIDEO_UPLOAD = "videos"
         const val VIDEO_LIKE = "videos/{videoId}/like"
         const val VIDEO_UNLIKE = "videos/{videoId}/like"
-        const val VIDEO_COLLECT = "videos/{videoId}/collect"
-        const val VIDEO_UNCOLLECT = "videos/{videoId}/collect"
+        const val VIDEO_SHARE = "videos/{videoId}/share"
         const val VIDEO_COMMENTS = "videos/{videoId}/comments"
-        const val VIDEO_MY_LIKES = "videos/likes"
-        const val VIDEO_MY_COLLECTS = "videos/collects"
-        const val VIDEO_USER = "videos/user/{userId}"
+        const val VIDEO_USER = "users/{userId}/videos"
 
         // User endpoints
         const val USER_REGISTER = "auth/register"
@@ -26,21 +23,16 @@ object ApiConstants {
         const val USER_REFRESH = "auth/refresh"
         const val USER_LOGOUT = "auth/logout"
         const val USER_INFO = "users/{userId}"
-        const val USER_UPDATE = "users/info"
+        const val USER_UPDATE = "users/me"
         const val USER_FOLLOW = "users/{userId}/follow"
         const val USER_UNFOLLOW = "users/{userId}/follow"
-        const val USER_FOLLOWERS = "users/{userId}/followers"
-        const val USER_FOLLOWING = "users/{userId}/following"
+        const val USER_FOLLOWERS = "users/{userId}/fans"
+        const val USER_FOLLOWING = "users/{userId}/follows"
 
         // Comment endpoints
         const val COMMENT_CREATE = "videos/{videoId}/comments"
-        const val COMMENT_DELETE = "comments/{commentId}"
-        const val COMMENT_LIKE = "comments/{commentId}/like"
-        const val COMMENT_UNLIKE = "comments/{commentId}/like"
 
         // File endpoints
         const val FILE_UPLOAD = "files/upload"
-        const val FILE_GET = "files/{filename}"
-        const val FILE_DELETE = "files/{filename}"
     }
 }

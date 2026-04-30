@@ -113,11 +113,10 @@ class VideoRepositoryImpl(
         LogUtil.d(TAG, "shareVideo called: videoId=$videoId, platform=$platform")
         return withContext(Dispatchers.IO) {
             try {
-                // New API doesn't have share endpoint, return video URL
-                val response = apiService.getVideoDetail(videoId)
+                val response = apiService.shareVideo(videoId, platform)
                 if (response.isSuccess && response.data != null) {
                     LogUtil.d(TAG, "shareVideo success: videoId=$videoId, platform=$platform")
-                    Result.Success(response.data.videoUrl)
+                    Result.Success(response.data.shareUrl ?: "")
                 } else {
                     LogUtil.w(TAG, "shareVideo failed: videoId=$videoId, platform=$platform, code=${response.code}, message=${response.message}")
                     Result.Error(Exception(response.message), response.message)

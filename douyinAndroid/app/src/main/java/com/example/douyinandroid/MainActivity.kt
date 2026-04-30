@@ -14,6 +14,7 @@ import com.example.douyinandroid.core.core_video.video.VideoPlayerManager
 import com.example.douyinandroid.feature.feature_auth.ui.LoginActivity
 import com.example.douyinandroid.feature.feature_main.ui.MainFragment
 import com.example.douyinandroid.feature.feature_main.ui.SimpleTabFragment
+import com.example.douyinandroid.feature.feature_me.ui.MeFragment
 import com.example.douyinandroid.feature.feature_publish.ui.PublishActivity
 import com.google.android.material.button.MaterialButton
 
@@ -119,7 +120,7 @@ class MainActivity : AppCompatActivity() {
             MainTab.HOME -> MainFragment.newInstance()
             MainTab.FRIENDS -> SimpleTabFragment.newInstance("朋友", "好友动态正在建设中")
             MainTab.MESSAGE -> SimpleTabFragment.newInstance("消息", "消息列表正在建设中")
-            MainTab.ME -> SimpleTabFragment.newInstance("我", "个人主页正在建设中")
+            MainTab.ME -> MeFragment.newInstance()
         }
     }
 

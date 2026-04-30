@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName
 // ==================== 用户相关 ====================
 
 data class UserInfoResponse(
-    @SerializedName("id")
+    @SerializedName(value = "userId", alternate = ["id"])
     val id: Long,
     @SerializedName("username")
     val username: String?,
@@ -57,6 +57,8 @@ data class UserUpdateRequest(
 )
 
 data class UserListPageResponse(
+    @SerializedName("items")
+    val items: List<UserInfo>? = null,
     @SerializedName("page")
     val page: Int,
     @SerializedName("size")
@@ -64,14 +66,24 @@ data class UserListPageResponse(
     @SerializedName("total")
     val total: Int,
     @SerializedName("totalPages")
-    val totalPages: Int,
+    val totalPages: Int? = null,
     @SerializedName("list")
-    val list: List<UserInfo>?
-)
+    val legacyList: List<UserInfo>? = null,
+    @SerializedName("hasMore")
+    val hasMore: Boolean = false
+) {
+    val list: List<UserInfo>? get() = items ?: legacyList
+}
 
 data class FollowActionResponse(
     @SerializedName("followId")
-    val followId: Long? = null
+    val followId: Long? = null,
+    @SerializedName("isFollowing")
+    val isFollowing: Boolean? = null,
+    @SerializedName("followCount")
+    val followCount: Long? = null,
+    @SerializedName("fansCount")
+    val fansCount: Long? = null
 )
 
 // ==================== 认证相关 ====================
@@ -115,7 +127,11 @@ data class LoginResponse(
     @SerializedName("avatar")
     val avatar: String?,
     @SerializedName("token")
-    val token: String
+    val token: String,
+    @SerializedName("refreshToken")
+    val refreshToken: String? = null,
+    @SerializedName("expiresIn")
+    val expiresIn: Long = 7 * 24 * 60 * 60L
 )
 
 data class RefreshTokenRequest(

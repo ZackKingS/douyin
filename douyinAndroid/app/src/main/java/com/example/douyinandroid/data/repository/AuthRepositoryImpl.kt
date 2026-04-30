@@ -38,7 +38,9 @@ class AuthRepositoryImpl(
                         username = loginData.username,
                         nickname = loginData.nickname,
                         avatar = loginData.avatar,
-                        token = loginData.token
+                        token = loginData.token,
+                        refreshToken = loginData.refreshToken,
+                        expiresIn = loginData.expiresIn
                     )
                     Result.Success(
                         LoginResult(
@@ -47,8 +49,8 @@ class AuthRepositoryImpl(
                             nickname = loginData.nickname,
                             avatar = loginData.avatar,
                             token = loginData.token,
-                            refreshToken = null,
-                            expiresIn = 7 * 24 * 60 * 60L
+                            refreshToken = loginData.refreshToken,
+                            expiresIn = loginData.expiresIn
                         )
                     )
                 } else {
@@ -84,7 +86,9 @@ class AuthRepositoryImpl(
                         username = loginData.username,
                         nickname = loginData.nickname,
                         avatar = loginData.avatar,
-                        token = loginData.token
+                        token = loginData.token,
+                        refreshToken = loginData.refreshToken,
+                        expiresIn = loginData.expiresIn
                     )
                     Result.Success(
                         LoginResult(
@@ -93,8 +97,8 @@ class AuthRepositoryImpl(
                             nickname = loginData.nickname,
                             avatar = loginData.avatar,
                             token = loginData.token,
-                            refreshToken = null,
-                            expiresIn = 7 * 24 * 60 * 60L
+                            refreshToken = loginData.refreshToken,
+                            expiresIn = loginData.expiresIn
                         )
                     )
                 } else {
@@ -141,7 +145,9 @@ class AuthRepositoryImpl(
                         username = loginData.username,
                         nickname = loginData.nickname,
                         avatar = loginData.avatar,
-                        token = loginData.token
+                        token = loginData.token,
+                        refreshToken = loginData.refreshToken,
+                        expiresIn = loginData.expiresIn
                     )
                     Result.Success(
                         LoginResult(
@@ -150,8 +156,8 @@ class AuthRepositoryImpl(
                             nickname = loginData.nickname,
                             avatar = loginData.avatar,
                             token = loginData.token,
-                            refreshToken = null,
-                            expiresIn = 7 * 24 * 60 * 60L
+                            refreshToken = loginData.refreshToken,
+                            expiresIn = loginData.expiresIn
                         )
                     )
                 } else {
@@ -191,8 +197,15 @@ class AuthRepositoryImpl(
                 val response = apiService.refreshToken(RefreshTokenRequest(refreshToken))
                 if (response.isSuccess && response.data != null) {
                     val tokenData = response.data
-                    authPreferences.token = tokenData.token
-                    tokenData.refreshToken?.let { authPreferences.refreshToken = it }
+                    authPreferences.saveLoginData(
+                        userId = tokenData.userId,
+                        username = tokenData.username,
+                        nickname = tokenData.nickname,
+                        avatar = tokenData.avatar,
+                        token = tokenData.token,
+                        refreshToken = tokenData.refreshToken,
+                        expiresIn = tokenData.expiresIn
+                    )
                     LogUtil.d(TAG, "refreshToken API success: userId=${authPreferences.userId}, newTokenLength=${tokenData.token.length}")
                     Result.Success(
                         LoginResult(
@@ -202,7 +215,7 @@ class AuthRepositoryImpl(
                             avatar = authPreferences.avatar,
                             token = tokenData.token,
                             refreshToken = tokenData.refreshToken,
-                            expiresIn = 7 * 24 * 60 * 60L
+                            expiresIn = tokenData.expiresIn
                         )
                     )
                 } else {
