@@ -265,6 +265,7 @@ class VideoAdapter(
                 tvDuration.text = item.formattedDuration
 
                 resetPlaybackProgress()
+                hidePlayPauseIcon()
             }
         }
 
@@ -284,6 +285,7 @@ class VideoAdapter(
             binding.playerView.player = player
             binding.ivCover.visibility = View.GONE
             binding.progressBar.visibility = View.GONE
+            hidePlayPauseIcon()
             startProgressUpdates()
         }
 
@@ -293,6 +295,7 @@ class VideoAdapter(
             binding.playerView.player = null
             exoPlayer = null
             binding.ivCover.visibility = View.VISIBLE
+            hidePlayPauseIcon()
         }
 
         fun releasePlayer() {
@@ -336,6 +339,14 @@ class VideoAdapter(
                     }
                 })
                 .start()
+        }
+
+        private fun hidePlayPauseIcon() {
+            binding.ivPlayPause.animate()
+                .setListener(null)
+                .cancel()
+            binding.ivPlayPause.visibility = View.GONE
+            binding.ivPlayPause.alpha = 0f
         }
 
         fun showLoading() {
