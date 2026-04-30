@@ -128,6 +128,26 @@ class VideoRepositoryImpl(
         }
     }
 
+    override suspend fun deleteVideo(videoId: String): Result<Unit> {
+        LogUtil.d(TAG, "deleteVideo called: videoId=$videoId")
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.deleteVideo(videoId)
+                if (response.isSuccess) {
+                    videoDao.deleteVideoById(videoId)
+                    LogUtil.d(TAG, "deleteVideo success and local cache updated: videoId=$videoId")
+                    Result.Success(Unit)
+                } else {
+                    LogUtil.w(TAG, "deleteVideo failed: videoId=$videoId, code=${response.code}, message=${response.message}")
+                    Result.Error(Exception(response.message), response.message)
+                }
+            } catch (e: Exception) {
+                LogUtil.e(TAG, "deleteVideo exception: videoId=$videoId", e)
+                Result.Error(e, e.message)
+            }
+        }
+    }
+
     override suspend fun getVideoComments(videoId: String, page: Int, size: Int): Result<List<Comment>> {
         LogUtil.d(TAG, "getVideoComments called: videoId=$videoId, page=$page, size=$size")
         return withContext(Dispatchers.IO) {

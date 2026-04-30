@@ -91,4 +91,10 @@ public class VideoController {
             currentUserId, file, cover, title, description, topicIds, location, latitude, longitude, atUserIds, musicId
         ));
     }
+    @RequireLogin
+    @DeleteMapping("/{videoId}")
+    public ApiResponse<Void> delete(@PathVariable String videoId, @CurrentUser Long currentUserId) {
+        videoService.delete(videoId, currentUserId);
+        return ApiResponse.success("删除成功", null);
+    }
 }

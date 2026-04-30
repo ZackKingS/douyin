@@ -10,6 +10,7 @@ interface VideoRepository {
     suspend fun likeVideo(videoId: String): Result<Unit>
     suspend fun unlikeVideo(videoId: String): Result<Unit>
     suspend fun shareVideo(videoId: String, platform: String): Result<String>
+    suspend fun deleteVideo(videoId: String): Result<Unit>
     suspend fun getVideoComments(videoId: String, page: Int = 1, size: Int = 20): Result<List<Comment>>
     suspend fun postComment(videoId: String, content: String, parentId: String? = null): Result<Comment>
 

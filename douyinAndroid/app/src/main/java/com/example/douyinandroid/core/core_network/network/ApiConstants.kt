@@ -11,6 +11,7 @@ object ApiConstants {
         const val VIDEO_LIST = "videos/feed"
         const val VIDEO_DETAIL = "videos/{videoId}"
         const val VIDEO_UPLOAD = "videos"
+        const val VIDEO_DELETE = "videos/{videoId}"
         const val VIDEO_LIKE = "videos/{videoId}/like"
         const val VIDEO_UNLIKE = "videos/{videoId}/like"
         const val VIDEO_SHARE = "videos/{videoId}/share"

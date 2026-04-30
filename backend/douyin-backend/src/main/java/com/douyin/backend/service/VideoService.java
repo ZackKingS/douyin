@@ -204,6 +204,22 @@ public class VideoService {
         return new VideoUploadResponse(video.getVideoId(), video.getTitle(), "processing", video.getCoverUrl(), video.getVideoUrl());
     }
 
+    @Transactional
+    public void delete(String videoId, Long currentUserId) {
+        Video video = getByVideoId(videoId);
+        if (!video.getAuthorId().equals(currentUserId)) {
+            throw new BusinessException(403, "只能删除自己发布的作品");
+        }
+        if (video.getStatus() != null && video.getStatus() == 0) {
+            return;
+        }
+        video.setStatus(0);
+        videoRepository.save(video);
+        User author = userRepository.findById(currentUserId).orElseThrow(() -> new BusinessException(404, "用户不存在"));
+        author.setVideoCount(videoRepository.countByAuthorIdAndStatus(currentUserId, 1));
+        userRepository.save(author);
+    }
+
     private String resolveCoverUrl(MultipartFile cover, FileUploadResponse storedVideo, Long currentUserId) {
         if (cover != null && !cover.isEmpty()) {
             return fileStorageService.store(cover, "cover", currentUserId).fileUrl();

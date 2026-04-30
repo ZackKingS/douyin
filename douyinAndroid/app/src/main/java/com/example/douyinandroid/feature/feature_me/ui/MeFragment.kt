@@ -46,7 +46,10 @@ class MeFragment : Fragment() {
     }
 
     private fun setupViews() {
-        videoAdapter = ProfileVideoAdapter { video -> showVideoPreview(video) }
+        videoAdapter = ProfileVideoAdapter(
+            onVideoClick = { video -> showVideoPreview(video) },
+            onVideoLongClick = { video -> confirmDeleteVideo(video) }
+        )
         binding.recyclerVideos.apply {
             adapter = videoAdapter
             layoutManager = GridLayoutManager(requireContext(), 3)
@@ -135,6 +138,15 @@ class MeFragment : Fragment() {
             .setMessage("确定要退出当前账号吗？")
             .setNegativeButton("取消", null)
             .setPositiveButton("退出") { _, _ -> viewModel.logout() }
+            .show()
+    }
+
+    private fun confirmDeleteVideo(video: Video) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("删除作品")
+            .setMessage("确定要删除这个作品吗？删除后将不会出现在主页和个人作品列表中。")
+            .setNegativeButton("取消", null)
+            .setPositiveButton("删除") { _, _ -> viewModel.deleteVideo(video) }
             .show()
     }
 

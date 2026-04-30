@@ -11,7 +11,8 @@ import com.example.douyinandroid.databinding.ItemProfileVideoBinding
 import com.example.douyinandroid.domain.model.Video
 
 class ProfileVideoAdapter(
-    private val onVideoClick: (Video) -> Unit
+    private val onVideoClick: (Video) -> Unit,
+    private val onVideoLongClick: (Video) -> Unit
 ) : ListAdapter<Video, ProfileVideoAdapter.VideoViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoViewHolder {
@@ -20,7 +21,7 @@ class ProfileVideoAdapter(
             parent,
             false
         )
-        return VideoViewHolder(binding, onVideoClick)
+        return VideoViewHolder(binding, onVideoClick, onVideoLongClick)
     }
 
     override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
@@ -29,12 +30,17 @@ class ProfileVideoAdapter(
 
     class VideoViewHolder(
         private val binding: ItemProfileVideoBinding,
-        private val onVideoClick: (Video) -> Unit
+        private val onVideoClick: (Video) -> Unit,
+        private val onVideoLongClick: (Video) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(video: Video) {
             binding.textPlayCount.text = video.formattedViewCount
             binding.root.setOnClickListener { onVideoClick(video) }
+            binding.root.setOnLongClickListener {
+                onVideoLongClick(video)
+                true
+            }
             Glide.with(binding.imageCover)
                 .load(video.coverUrl.takeIf { it.isNotBlank() })
                 .placeholder(R.drawable.ic_empty)

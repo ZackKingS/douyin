@@ -19,6 +19,11 @@ interface ApiService {
         @Path("videoId") videoId: String
     ): ApiResponse<VideoDetailResponse>
 
+    @DELETE(ApiConstants.Endpoints.VIDEO_DELETE)
+    suspend fun deleteVideo(
+        @Path("videoId") videoId: String
+    ): ApiResponse<Unit>
+
     @POST(ApiConstants.Endpoints.VIDEO_LIKE)
     suspend fun likeVideo(
         @Path("videoId") videoId: String

@@ -121,8 +121,8 @@ public class UserService {
     }
 
     public VideoListResponse getUserVideos(Long userId, int page, int size, Long sourceUserId) {
-        List<com.douyin.backend.entity.Video> videos = videoRepository.findByAuthorIdOrderByCreateTimeDesc(userId, PageRequest.of(page - 1, size));
-        int total = (int) videoRepository.countByAuthorId(userId);
+        List<com.douyin.backend.entity.Video> videos = videoRepository.findByAuthorIdAndStatusOrderByCreateTimeDesc(userId, 1, PageRequest.of(page - 1, size));
+        int total = (int) videoRepository.countByAuthorIdAndStatus(userId, 1);
         return new VideoListResponse(
             videos.stream().map(video -> VideoMapper.toVideoItem(video, sourceUserId, userRepository, followRepository, videoLikeRepository)).toList(),
             page,

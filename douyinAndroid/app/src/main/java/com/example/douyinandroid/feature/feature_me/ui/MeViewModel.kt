@@ -9,11 +9,13 @@ import com.example.douyinandroid.domain.model.User
 import com.example.douyinandroid.domain.model.Video
 import com.example.douyinandroid.domain.repository.AuthRepository
 import com.example.douyinandroid.domain.repository.UserRepository
+import com.example.douyinandroid.domain.repository.VideoRepository
 import kotlinx.coroutines.launch
 
 class MeViewModel(
     private val userRepository: UserRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val videoRepository: VideoRepository
 ) : ViewModel() {
 
     private val _uiState = MutableLiveData(MeUiState(isLoading = true))
@@ -49,6 +51,23 @@ class MeViewModel(
         viewModelScope.launch {
             authRepository.logout()
             _uiState.value = _uiState.value.orEmpty().copy(logoutFinished = true)
+        }
+    }
+
+    fun deleteVideo(video: Video) {
+        viewModelScope.launch {
+            when (val result = videoRepository.deleteVideo(video.id)) {
+                is Result.Success -> {
+                    _videos.value = _videos.value.orEmpty().filterNot { it.id == video.id }
+                    _profile.value = _profile.value?.let { profile ->
+                        profile.copy(videoCount = (profile.videoCount - 1).coerceAtLeast(0))
+                    }
+                }
+                is Result.Error -> _uiState.value = _uiState.value.orEmpty().copy(
+                    error = result.message ?: "作品删除失败"
+                )
+                is Result.Loading -> Unit
+            }
         }
     }
 
