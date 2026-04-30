@@ -313,10 +313,18 @@ class VideoAdapter(
         }
 
         private fun showPlayPauseIcon(isPaused: Boolean) {
-            val iconRes = if (isPaused) R.drawable.ic_play else R.drawable.ic_pause
+//            val iconRes = if (isPaused) R.drawable.ic_play else R.drawable.ic_pause
+
+            val iconRes = R.drawable.ic_play
+
+            binding.ivPlayPause.animate().cancel()
             binding.ivPlayPause.setImageResource(iconRes)
             binding.ivPlayPause.visibility = View.VISIBLE
             binding.ivPlayPause.alpha = 1f
+
+            if (isPaused) {
+                return
+            }
 
             binding.ivPlayPause.animate()
                 .alpha(0f)
