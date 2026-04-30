@@ -22,6 +22,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var authPreferences: AuthPreferences
     private lateinit var tabs: Map<MainTab, TextView>
     private lateinit var publishTab: MaterialButton
+    private val tabFragments = mutableMapOf<MainTab, Fragment>()
     private var currentTab = MainTab.HOME
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,6 +51,7 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState == null) {
             showTab(MainTab.HOME)
         } else {
+            restoreTabFragments()
             updateSelectedTab(currentTab)
         }
     }
@@ -75,15 +77,40 @@ class MainActivity : AppCompatActivity() {
         updateSelectedTab(MainTab.HOME)
     }
 
+    private fun restoreTabFragments() {
+        MainTab.entries.forEach { tab ->
+            supportFragmentManager.findFragmentByTag(tab.name)?.let { fragment ->
+                tabFragments[tab] = fragment
+            }
+        }
+    }
+
     private fun showTab(tab: MainTab) {
+        if (currentTab == tab && tabFragments[tab]?.isAdded == true) {
+            updateSelectedTab(tab)
+            return
+        }
+
         currentTab = tab
         if (tab != MainTab.HOME) {
             VideoPlayerManager.instance.pause()
         }
 
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragmentContainer, createFragment(tab))
-            .commit()
+        val transaction = supportFragmentManager.beginTransaction()
+        tabFragments.forEach { (_, fragment) ->
+            if (fragment.isAdded) {
+                transaction.hide(fragment)
+            }
+        }
+
+        val targetFragment = tabFragments.getOrPut(tab) { createFragment(tab) }
+        if (targetFragment.isAdded) {
+            transaction.show(targetFragment)
+        } else {
+            transaction.add(R.id.fragmentContainer, targetFragment, tab.name)
+        }
+
+        transaction.commit()
         updateSelectedTab(tab)
     }
 
