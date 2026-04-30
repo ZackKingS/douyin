@@ -32,14 +32,12 @@
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/tilUsername"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        style="@style/Widget.Douyin.AuthTextInputLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="32dp"
         android:layout_marginTop="48dp"
         android:hint="@string/hint_username"
-        app:boxStrokeColor="@color/white"
-        app:hintTextColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvAppName"
@@ -51,21 +49,20 @@
             android:layout_height="wrap_content"
             android:inputType="text"
             android:maxLines="1"
-            android:textColor="@color/white" />
+            android:textColor="@color/white"
+            android:textColorHint="@color/gray_light" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/tilPassword"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        style="@style/Widget.Douyin.AuthTextInputLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="32dp"
         android:layout_marginTop="16dp"
         android:hint="@string/hint_password"
-        app:boxStrokeColor="@color/white"
         app:endIconMode="password_toggle"
-        app:hintTextColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tilUsername"
@@ -77,7 +74,8 @@
             android:layout_height="wrap_content"
             android:inputType="textPassword"
             android:maxLines="1"
-            android:textColor="@color/white" />
+            android:textColor="@color/white"
+            android:textColorHint="@color/gray_light" />
 
     </com.google.android.material.textfield.TextInputLayout>
 

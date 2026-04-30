@@ -7,6 +7,17 @@
 
     <style name="Theme.DouyinAndroid" parent="Base.Theme.DouyinAndroid" />
 
+    <style name="Widget.Douyin.AuthTextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxBackgroundColor">@color/auth_input_background</item>
+        <item name="boxStrokeColor">@color/auth_text_input_stroke</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="hintTextColor">@color/auth_text_input_hint</item>
+        <item name="startIconTint">@color/gray_light</item>
+        <item name="endIconTint">@color/gray_light</item>
+        <item name="android:textColorHint">@color/gray_light</item>
+    </style>
+
     <style name="DouyinBottomTab">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">match_parent</item>
