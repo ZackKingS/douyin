@@ -10,6 +10,7 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
     Optional<Video> findByVideoId(String videoId);
     List<Video> findByStatusOrderByCreateTimeDesc(Integer status, Pageable pageable);
     List<Video> findByAuthorIdAndStatusOrderByCreateTimeDesc(Long authorId, Integer status, Pageable pageable);
+    List<Video> findByAuthorIdAndStatusOrderByCreateTimeDesc(Long authorId, Integer status);
     List<Video> findByAuthorIdOrderByCreateTimeDesc(Long authorId, Pageable pageable);
     List<Video> findByAuthorIdOrderByCreateTimeDesc(Long authorId);
     List<Video> findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCaseOrderByCreateTimeDesc(

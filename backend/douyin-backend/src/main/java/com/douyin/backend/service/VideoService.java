@@ -210,14 +210,26 @@ public class VideoService {
         if (!video.getAuthorId().equals(currentUserId)) {
             throw new BusinessException(403, "只能删除自己发布的作品");
         }
-        if (video.getStatus() != null && video.getStatus() == 0) {
-            return;
-        }
-        video.setStatus(0);
-        videoRepository.save(video);
+        String videoUrl = video.getVideoUrl();
+        String coverUrl = video.getCoverUrl();
+        commentRepository.deleteByVideoId(video.getId());
+        videoLikeRepository.deleteByVideoId(video.getId());
+        videoRepository.delete(video);
         User author = userRepository.findById(currentUserId).orElseThrow(() -> new BusinessException(404, "用户不存在"));
         author.setVideoCount(videoRepository.countByAuthorIdAndStatus(currentUserId, 1));
+        author.setLikeCount(videoRepository.findByAuthorIdAndStatusOrderByCreateTimeDesc(currentUserId, 1)
+            .stream()
+            .mapToLong(Video::getLikeCount)
+            .sum());
         userRepository.save(author);
+        deleteStoredMedia(videoUrl, coverUrl);
+    }
+
+    private void deleteStoredMedia(String videoUrl, String coverUrl) {
+        fileStorageService.deleteByFileUrl(videoUrl);
+        if (coverUrl != null && !coverUrl.equals(videoUrl)) {
+            fileStorageService.deleteByFileUrl(coverUrl);
+        }
     }
 
     private String resolveCoverUrl(MultipartFile cover, FileUploadResponse storedVideo, Long currentUserId) {
@@ -252,6 +264,7 @@ public class VideoService {
         User user = userRepository.findById(authorId).orElseThrow(() -> new BusinessException(404, "用户不存在"));
         long totalLikes = videoRepository.findByAuthorIdOrderByCreateTimeDesc(authorId)
             .stream()
+            .filter(video -> video.getStatus() == null || video.getStatus() == 1)
             .mapToLong(Video::getLikeCount)
             .sum();
         user.setLikeCount(totalLikes);

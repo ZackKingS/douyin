@@ -64,6 +64,31 @@ public class FileStorageService {
         return Paths.get(appProperties.getStorageRoot()).toAbsolutePath().normalize().resolve(fileKey);
     }
 
+    public void deleteByFileUrl(String fileUrl) {
+        if (fileUrl == null || fileUrl.isBlank()) {
+            return;
+        }
+        String marker = "/media/";
+        int markerIndex = fileUrl.indexOf(marker);
+        if (markerIndex < 0) {
+            return;
+        }
+        String fileKey = fileUrl.substring(markerIndex + marker.length());
+        if (fileKey.isBlank()) {
+            return;
+        }
+        try {
+            Path storageRoot = Paths.get(appProperties.getStorageRoot()).toAbsolutePath().normalize();
+            Path target = storageRoot.resolve(fileKey).normalize();
+            if (!target.startsWith(storageRoot)) {
+                throw new IllegalArgumentException("非法文件路径");
+            }
+            Files.deleteIfExists(target);
+        } catch (IOException ex) {
+            throw new IllegalStateException("文件删除失败", ex);
+        }
+    }
+
     private String buildFileKey(String type, String extension, Long userId) {
         String datePath = LocalDate.now().toString().replace("-", "/");
         String name = UUID.randomUUID().toString().replace("-", "");
