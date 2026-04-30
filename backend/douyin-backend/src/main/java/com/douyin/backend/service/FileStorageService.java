@@ -36,6 +36,19 @@ public class FileStorageService {
         }
     }
 
+    public FileUploadResponse storeGeneratedFile(Path source, String type, Long userId, String extension) {
+        try {
+            String cleanExtension = extension == null || extension.isBlank() ? "jpg" : extension;
+            String fileKey = buildFileKey(type, cleanExtension, userId);
+            Path target = resolve(fileKey);
+            Files.createDirectories(target.getParent());
+            Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+            return new FileUploadResponse(fileKey, appProperties.getBaseUrl() + "/media/" + fileKey);
+        } catch (IOException ex) {
+            throw new IllegalStateException("生成文件保存失败", ex);
+        }
+    }
+
     public UploadTokenResponse createUploadToken(UploadTokenRequest request) {
         String extension = getExtension(request.getFilename());
         String fileKey = buildFileKey(request.getType(), extension, null);

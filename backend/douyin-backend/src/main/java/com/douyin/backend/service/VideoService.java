@@ -1,6 +1,7 @@
 package com.douyin.backend.service;
 
 import com.douyin.backend.common.BusinessException;
+import com.douyin.backend.dto.upload.FileUploadResponse;
 import com.douyin.backend.dto.user.UserInfoDto;
 import com.douyin.backend.dto.video.*;
 import com.douyin.backend.entity.Comment;
@@ -13,6 +14,7 @@ import com.douyin.backend.repository.UserRepository;
 import com.douyin.backend.repository.VideoLikeRepository;
 import com.douyin.backend.repository.VideoRepository;
 import java.math.BigDecimal;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -30,6 +32,7 @@ public class VideoService {
     private final VideoLikeRepository videoLikeRepository;
     private final CommentRepository commentRepository;
     private final FileStorageService fileStorageService;
+    private final VideoCoverService videoCoverService;
 
     public VideoService(
         VideoRepository videoRepository,
@@ -37,7 +40,8 @@ public class VideoService {
         FollowRepository followRepository,
         VideoLikeRepository videoLikeRepository,
         CommentRepository commentRepository,
-        FileStorageService fileStorageService
+        FileStorageService fileStorageService,
+        VideoCoverService videoCoverService
     ) {
         this.videoRepository = videoRepository;
         this.userRepository = userRepository;
@@ -45,6 +49,7 @@ public class VideoService {
         this.videoLikeRepository = videoLikeRepository;
         this.commentRepository = commentRepository;
         this.fileStorageService = fileStorageService;
+        this.videoCoverService = videoCoverService;
     }
 
     public VideoFeedResponse getFeed(int page, int size, Long currentUserId) {
@@ -174,10 +179,9 @@ public class VideoService {
         if (file == null || file.isEmpty()) {
             throw new BusinessException(400, "视频文件不能为空");
         }
-        String videoUrl = fileStorageService.store(file, "video", currentUserId).fileUrl();
-        String coverUrl = cover != null && !cover.isEmpty()
-            ? fileStorageService.store(cover, "cover", currentUserId).fileUrl()
-            : videoUrl;
+        FileUploadResponse storedVideo = fileStorageService.store(file, "video", currentUserId);
+        String videoUrl = storedVideo.fileUrl();
+        String coverUrl = resolveCoverUrl(cover, storedVideo, currentUserId);
         Video video = new Video();
         video.setVideoId("v_" + UUID.randomUUID().toString().replace("-", "").substring(0, 12));
         video.setAuthorId(currentUserId);
@@ -198,6 +202,15 @@ public class VideoService {
         author.setVideoCount(videoRepository.countByAuthorId(currentUserId));
         userRepository.save(author);
         return new VideoUploadResponse(video.getVideoId(), video.getTitle(), "processing", video.getCoverUrl(), video.getVideoUrl());
+    }
+
+    private String resolveCoverUrl(MultipartFile cover, FileUploadResponse storedVideo, Long currentUserId) {
+        if (cover != null && !cover.isEmpty()) {
+            return fileStorageService.store(cover, "cover", currentUserId).fileUrl();
+        }
+        Path videoPath = fileStorageService.resolve(storedVideo.fileKey());
+        String generatedCoverUrl = videoCoverService.generateCoverUrl(videoPath, currentUserId);
+        return generatedCoverUrl == null ? storedVideo.fileUrl() : generatedCoverUrl;
     }
 
     public Video getByVideoId(String videoId) {

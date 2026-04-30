@@ -58,6 +58,17 @@ class PublishFragment : Fragment() {
         }
     }
 
+    private val coverPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        val allGranted = results.all { it.value }
+        if (allGranted) {
+            openCoverPicker()
+        } else {
+            Toast.makeText(context, "需要图片权限才能选择封面", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -110,7 +121,7 @@ class PublishFragment : Fragment() {
 
         // Cover selection
         binding.btnSelectCover.setOnClickListener {
-            openCoverPicker()
+            checkPermissionsAndPickCover()
         }
     }
 
@@ -219,8 +230,7 @@ class PublishFragment : Fragment() {
     private fun checkPermissionsAndPickVideo() {
         val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             arrayOf(
-                Manifest.permission.READ_MEDIA_VIDEO,
-                Manifest.permission.READ_MEDIA_IMAGES
+                Manifest.permission.READ_MEDIA_VIDEO
             )
         } else {
             arrayOf(
@@ -236,6 +246,28 @@ class PublishFragment : Fragment() {
             openVideoPicker()
         } else {
             permissionLauncher.launch(permissions)
+        }
+    }
+
+    private fun checkPermissionsAndPickCover() {
+        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            arrayOf(
+                Manifest.permission.READ_MEDIA_IMAGES
+            )
+        } else {
+            arrayOf(
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            )
+        }
+
+        val allGranted = permissions.all {
+            ContextCompat.checkSelfPermission(requireContext(), it) == PackageManager.PERMISSION_GRANTED
+        }
+
+        if (allGranted) {
+            openCoverPicker()
+        } else {
+            coverPermissionLauncher.launch(permissions)
         }
     }
 
