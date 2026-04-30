@@ -2,9 +2,14 @@ package com.example.douyinandroid.feature.feature_main.ui.adapter
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.SeekBar
+import androidx.media3.common.C
+import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.recyclerview.widget.DiffUtil
@@ -16,6 +21,7 @@ import com.example.douyinandroid.common.common_utils.LogUtil
 import com.example.douyinandroid.databinding.ItemVideoBinding
 import com.example.douyinandroid.domain.model.Video
 import com.example.douyinandroid.core.core_video.video.VideoPlayerManager
+import java.util.Locale
 
 private const val TAG = "VideoAdapter"
 private const val PAYLOAD_ATTACH_PLAYER = "attach_player"
@@ -114,9 +120,29 @@ class VideoAdapter(
 
         private var video: Video? = null
         private var exoPlayer: ExoPlayer? = null
+        private val progressHandler = Handler(Looper.getMainLooper())
+        private var isUserSeeking = false
+
+        private val progressRunnable = object : Runnable {
+            override fun run() {
+                updatePlaybackProgress()
+                progressHandler.postDelayed(this, PROGRESS_UPDATE_INTERVAL_MS)
+            }
+        }
+
+        private val progressPlayerListener = object : Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                updatePlaybackProgress()
+            }
+
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                updatePlaybackProgress()
+            }
+        }
 
         init {
             setupClickListeners()
+            setupProgressControls()
         }
 
         private fun setupClickListeners() {
@@ -160,6 +186,32 @@ class VideoAdapter(
             binding.ivCover.setOnClickListener {
                 togglePlayPause()
             }
+        }
+
+        private fun setupProgressControls() {
+            binding.seekBarProgress.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                    if (!fromUser) return
+                    val duration = getPlayableDuration() ?: return
+                    val seekPosition = duration * progress / PROGRESS_MAX
+                    binding.tvCurrentTime.text = formatTime(seekPosition)
+                }
+
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {
+                    isUserSeeking = true
+                }
+
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                    val player = exoPlayer ?: return
+                    val duration = getPlayableDuration()
+                    if (duration != null) {
+                        val seekPosition = duration * (seekBar?.progress ?: 0) / PROGRESS_MAX
+                        player.seekTo(seekPosition)
+                    }
+                    isUserSeeking = false
+                    updatePlaybackProgress()
+                }
+            })
         }
 
         fun bind(item: Video) {
@@ -211,6 +263,8 @@ class VideoAdapter(
 
                 // Duration
                 tvDuration.text = item.formattedDuration
+
+                resetPlaybackProgress()
             }
         }
 
@@ -221,15 +275,21 @@ class VideoAdapter(
         }
 
         fun attachPlayer(player: ExoPlayer?) {
-            if (player != null && exoPlayer == null) {
+            if (player == null) return
+            if (exoPlayer != player) {
+                detachPlayer()
                 exoPlayer = player
-                binding.playerView.player = player
-                binding.ivCover.visibility = View.GONE
-                binding.progressBar.visibility = View.GONE
+                player.addListener(progressPlayerListener)
             }
+            binding.playerView.player = player
+            binding.ivCover.visibility = View.GONE
+            binding.progressBar.visibility = View.GONE
+            startProgressUpdates()
         }
 
         fun detachPlayer() {
+            stopProgressUpdates()
+            exoPlayer?.removeListener(progressPlayerListener)
             binding.playerView.player = null
             exoPlayer = null
             binding.ivCover.visibility = View.VISIBLE
@@ -277,6 +337,67 @@ class VideoAdapter(
         fun hideLoading() {
             binding.progressBar.visibility = View.GONE
         }
+
+        private fun startProgressUpdates() {
+            progressHandler.removeCallbacks(progressRunnable)
+            updatePlaybackProgress()
+            progressHandler.postDelayed(progressRunnable, PROGRESS_UPDATE_INTERVAL_MS)
+        }
+
+        private fun stopProgressUpdates() {
+            progressHandler.removeCallbacks(progressRunnable)
+            isUserSeeking = false
+        }
+
+        private fun updatePlaybackProgress() {
+            val player = exoPlayer ?: run {
+                resetPlaybackProgress()
+                return
+            }
+            val duration = getPlayableDuration(player)
+            val position = player.currentPosition.coerceAtLeast(0L)
+
+            binding.tvCurrentTime.text = formatTime(position)
+            binding.tvTotalTime.text = formatTime(duration ?: 0L)
+
+            if (!isUserSeeking) {
+                binding.seekBarProgress.progress = if (duration != null && duration > 0L) {
+                    ((position.coerceAtMost(duration) * PROGRESS_MAX) / duration).toInt()
+                } else {
+                    0
+                }
+            }
+
+            binding.seekBarProgress.secondaryProgress = if (duration != null && duration > 0L) {
+                ((player.bufferedPosition.coerceAtMost(duration) * PROGRESS_MAX) / duration).toInt()
+            } else {
+                0
+            }
+        }
+
+        private fun resetPlaybackProgress() {
+            binding.seekBarProgress.progress = 0
+            binding.seekBarProgress.secondaryProgress = 0
+            binding.tvCurrentTime.text = formatTime(0L)
+            binding.tvTotalTime.text = formatTime(0L)
+        }
+
+        private fun getPlayableDuration(player: ExoPlayer? = exoPlayer): Long? {
+            val duration = player?.duration ?: return null
+            return duration.takeIf { it > 0L && it != C.TIME_UNSET }
+        }
+
+        private fun formatTime(timeMs: Long): String {
+            val totalSeconds = (timeMs.coerceAtLeast(0L) / 1000).toInt()
+            val hours = totalSeconds / 3600
+            val minutes = (totalSeconds % 3600) / 60
+            val seconds = totalSeconds % 60
+            return if (hours > 0) {
+                String.format(Locale.US, "%d:%02d:%02d", hours, minutes, seconds)
+            } else {
+                String.format(Locale.US, "%02d:%02d", minutes, seconds)
+            }
+        }
     }
 
     class VideoDiffCallback : DiffUtil.ItemCallback<Video>() {
@@ -289,3 +410,6 @@ class VideoAdapter(
         }
     }
 }
+
+private const val PROGRESS_MAX = 1000
+private const val PROGRESS_UPDATE_INTERVAL_MS = 250L

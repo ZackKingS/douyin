@@ -148,7 +148,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
-        android:layout_marginBottom="80dp"
+        android:layout_marginBottom="132dp"
         android:gravity="center_horizontal"
         android:orientation="vertical"
         android:padding="16dp">
@@ -264,5 +264,52 @@
         android:alpha="0"
         android:src="@drawable/ic_play"
         android:visibility="gone" />
+
+    <!-- Playback progress -->
+    <LinearLayout
+        android:id="@+id/layoutPlaybackProgress"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_gravity="bottom"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="4dp">
+
+        <TextView
+            android:id="@+id/tvCurrentTime"
+            android:layout_width="42dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="00:00"
+            android:textColor="@android:color/white"
+            android:textSize="11sp" />
+
+        <SeekBar
+            android:id="@+id/seekBarProgress"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:max="1000"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:progress="0"
+            android:progressBackgroundTint="#4DFFFFFF"
+            android:progressTint="@android:color/white"
+            android:secondaryProgressTint="#80FFFFFF"
+            android:splitTrack="false"
+            android:thumbTint="@android:color/white" />
+
+        <TextView
+            android:id="@+id/tvTotalTime"
+            android:layout_width="42dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="00:00"
+            android:textColor="#CCFFFFFF"
+            android:textSize="11sp" />
+
+    </LinearLayout>
 
 </FrameLayout>
