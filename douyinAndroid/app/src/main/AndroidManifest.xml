@@ -55,6 +55,13 @@
             android:theme="@style/Theme.DouyinAndroid" />
 
         <activity
+            android:name=".feature.feature_me.ui.ProfileVideoPlayerActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:hardwareAccelerated="true"
+            android:theme="@style/Theme.DouyinAndroid" />
+
+        <activity
             android:name=".feature.feature_auth.ui.LoginActivity"
             android:exported="false"
             android:screenOrientation="portrait"

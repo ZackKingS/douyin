@@ -47,7 +47,7 @@ class MeFragment : Fragment() {
 
     private fun setupViews() {
         videoAdapter = ProfileVideoAdapter(
-            onVideoClick = { video -> showVideoPreview(video) },
+            onVideoClick = { video -> openVideoPlayer(video) },
             onVideoLongClick = { video -> confirmDeleteVideo(video) }
         )
         binding.recyclerVideos.apply {
@@ -124,12 +124,11 @@ class MeFragment : Fragment() {
             .into(binding.imageAvatar)
     }
 
-    private fun showVideoPreview(video: Video) {
-        Toast.makeText(
-            requireContext(),
-            video.title?.takeIf { it.isNotBlank() } ?: "作品 ${video.formattedViewCount} 次播放",
-            Toast.LENGTH_SHORT
-        ).show()
+    private fun openVideoPlayer(video: Video) {
+        val videos = videoAdapter.currentList
+        val initialPosition = videos.indexOfFirst { it.id == video.id }.takeIf { it >= 0 } ?: 0
+        ProfileVideoPlaybackStore.setPlayback(videos, initialPosition)
+        startActivity(Intent(requireContext(), ProfileVideoPlayerActivity::class.java))
     }
 
     private fun confirmLogout() {
