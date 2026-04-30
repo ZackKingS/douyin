@@ -138,11 +138,11 @@ class MainFragment : Fragment() {
 
         viewModel.likeEvent.observe(viewLifecycleOwner) { event ->
             event?.let {
-                Toast.makeText(
-                    context,
-                    if (it.isLiked) "已点赞" else "取消点赞",
-                    Toast.LENGTH_SHORT
-                ).show()
+//                Toast.makeText(
+//                    context,
+//                    if (it.isLiked) "已点赞" else "取消点赞",
+//                    Toast.LENGTH_SHORT
+//                ).show()
                 viewModel.onLikeEventHandled()
             }
         }
@@ -226,7 +226,6 @@ class MainFragment : Fragment() {
 
         val targetVideo = videos[targetPage]
         if (!shouldScrollToFirstVideo && currentPage == targetPage && currentPlayingVideoId == targetVideo.id) {
-            videoAdapter.setCurrentPlayingPosition(targetPage, VideoPlayerManager.instance.getPlayer())
             return
         }
         playVideoAtPosition(targetPage)
